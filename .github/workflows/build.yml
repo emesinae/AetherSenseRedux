@@ -1,0 +1,41 @@
+name: Build
+
+on:
+  push:
+    branches: "*"
+    tags-ignore: "*"
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3.3.0
+        with:
+          fetch-depth: 0
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: "9.0.x"
+      - name: Build with dotnet
+        run: dotnet build --configuration Release --nologo ./AetherSenseRedux.sln
+      - name: dotnet test
+        run: dotnet test --configuration Release --nologo ./AetherSenseRedux.sln
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AetherSenseRedux-${{ matrix.os }}
+          path: |
+            ./AetherSenseRedux/bin/Release/*.nupkg
+            ./AetherSenseRedux/bin/Release/*.snupkg
+            ./AetherSenseRedux/bin/Release/**/AetherSenseRedux*.dll
+            ./AetherSenseRedux/bin/Release/**/AetherSenseRedux*.xml
+            ./AetherSenseRedux/bin/Release/**/AetherSenseRedux*.pdb
+            ./AetherSenseRedux/bin/Release/**/AetherSenseRedux*.deps.json
+            ./AetherSenseRedux/bin/Release/*.dll
+            ./AetherSenseRedux/bin/Release/AetherSenseRedux/latest.zip
