@@ -31,6 +31,8 @@ jobs:
 
       - name: Install Versionize
         run: dotnet tool install --global Versionize
+      - name: Versionize dry run
+        run: versionize --dry-run
       - name: Versionize Release
         id: versionize
         run: versionize --exit-insignificant-commits
