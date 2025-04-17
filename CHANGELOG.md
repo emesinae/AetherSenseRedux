@@ -4,6 +4,13 @@ Change Log
 
 ### 🐛 Bug Fixes
 
+* **test:** one last try ([97fe4dc](https://www.github.com/emesinae/AetherSenseRedux/commit/97fe4dcf9b3d729edf4b5e7fa5881c2b6a2741fa))
+
+<a name="0.1.0"></a>
+## [0.1.0](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v0.1.0) (2025-04-17)
+
+### 🐛 Bug Fixes
+
 * **test:** please I'm desperate ([1dc211f](https://www.github.com/emesinae/AetherSenseRedux/commit/1dc211f57b655824cf202927cdfec980849f14ab))
 
 <a name="0.1.0"></a>
