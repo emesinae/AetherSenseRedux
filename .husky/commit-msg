@@ -23,5 +23,3 @@ dotnet husky run --name "commit-message-linter" --args "$1"
 echo
 echo Great work! 🥂
 echo
-
-dotnet husky run

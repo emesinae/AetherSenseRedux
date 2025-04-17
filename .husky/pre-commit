@@ -20,4 +20,3 @@ dotnet husky run -v --group "pre-commit"
 ## or put your custom commands -------------------
 #echo 'Husky.Net is awesome!'
 
-dotnet husky run
