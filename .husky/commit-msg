@@ -20,6 +20,8 @@
 #echo 'Husky.Net is awesome!'
 
 dotnet husky run --name "commit-message-linter" --args "$1"
+
 echo
-echo Great work! 🥂
-echo
+echo Looks fantastic, just like you, cutie! 😍
+echo Great work! 🦋
+echo 
