@@ -58,8 +58,8 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
-          name: AetherSenseRedux ${{ github.ref_name }}
+          tag_name: ${{ git describe --exact-match --tags }}
+          name: AetherSenseRedux ${{ git describe --exact-match --tags }}
           draft: false
           prerelease: false
           generate_release_notes: true
