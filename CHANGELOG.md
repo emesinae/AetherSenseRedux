@@ -2,6 +2,13 @@ Change Log
 <a name="0.1.0"></a>
 ## [0.1.0](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v0.1.0) (2025-04-17)
 
+### 🐛 Bug Fixes
+
+* **test:** fake commit to test version bump ([5972f24](https://www.github.com/emesinae/AetherSenseRedux/commit/5972f24058dc760890166792cb4f8c5c2ba2fed0))
+
+<a name="0.1.0"></a>
+## [0.1.0](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v0.1.0) (2025-04-17)
+
 ### Other
 
 * add debug dry run ([e7e0800](https://www.github.com/emesinae/AetherSenseRedux/commit/e7e080029a40bd5e5f5ab87461eb8de956010260))
