@@ -88,9 +88,6 @@ jobs:
       - name: Commit repo.json
         if: steps.versionize.outcome == 'success'
         run: |
-          git fetch origin main
-          git branch -f main ${{ github.sha }}
-          git checkout main
           git add repo.json
           git commit --amend --no-edit || true
-          git push origin main
+          git push --follow-tags origin main
