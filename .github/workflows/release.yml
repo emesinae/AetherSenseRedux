@@ -38,6 +38,10 @@ jobs:
       - name: No release required
         if: steps.versionize.outcome != 'success'
         run: echo "Skipping Release. No release required."
+      - name: Retrieve version
+        id: version
+        run: |
+          echo "VERSION=$(versionize inspect)" >> $GITHUB_OUTPUT
 
       - name: Build
         if: steps.versionize.outcome == 'success'
@@ -58,8 +62,8 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ git describe --exact-match --tags }}
-          name: AetherSenseRedux ${{ git describe --exact-match --tags }}
+          tag_name: ${{ steps.version.outputs.VERSION }}
+          name: AetherSenseRedux ${{ steps.version.outputs.VERSION }}
           draft: false
           prerelease: false
           generate_release_notes: true
@@ -69,7 +73,7 @@ jobs:
       - name: Write out repo.json
         if: steps.versionize.outcome == 'success'
         run: |
-          $ver = git describe --exact-match --tags
+          $ver = '${{ steps.version.outputs.VERSION }}'
           $path = './repo.json'
           $json = Get-Content -Raw $path | ConvertFrom-Json
           $json[0].AssemblyVersion = $ver
