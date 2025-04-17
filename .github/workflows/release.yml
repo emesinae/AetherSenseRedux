@@ -31,6 +31,9 @@ jobs:
 
       - name: Install Versionize
         run: dotnet tool install --global Versionize
+      - name: Versionize Release
+        id: versionize
+        run: versionize --changelog-all --exit-insignificant-commits
       - name: No release required
         if: steps.versionize.outcome != 'success'
         run: echo "Skipping Release. No release required."
