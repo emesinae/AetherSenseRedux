@@ -40,8 +40,10 @@ jobs:
         run: echo "Skipping Release. No release required."
       - name: Retrieve version
         id: version
+        shell: bash
         run: |
-          echo "VERSION=$(versionize inspect)" >> $GITHUB_OUTPUT
+          echo "Retrieved version: $(versionize inspect)"
+          echo "VERSION=$(versionize inspect)" >> "$GITHUB_OUTPUT"
 
       - name: Build
         if: steps.versionize.outcome == 'success'
