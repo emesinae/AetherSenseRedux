@@ -66,11 +66,11 @@ namespace AetherSenseRedux
         {
             if (!SettingsVisible)
             {
-                
+
                 // if we aren't drawing the window we don't need a working copy of the configuration
                 if (WorkingCopy != null)
                 {
-                    Plugin.PluginLog.Debug("Making WorkingCopy null.");
+                    Service.PluginLog.Debug("Making WorkingCopy null.");
                     WorkingCopy = null;
                 }
 
@@ -81,7 +81,7 @@ namespace AetherSenseRedux
 
             if (WorkingCopy == null)
             {
-                Plugin.PluginLog.Debug("WorkingCopy was null, importing current config.");
+                Service.PluginLog.Debug("WorkingCopy was null, importing current config.");
                 WorkingCopy = new Configuration();
                 WorkingCopy.Import(configuration);
             }
@@ -119,7 +119,7 @@ namespace AetherSenseRedux
                 ////    BODY
                 ////
                 ImGui.BeginChild("body", new Vector2(0, -ImGui.GetFrameHeightWithSpacing()), false);
-                
+
                 ImGui.Indent(1); //for some reason the UI likes to cut off a pixel on the left side if we don't do this
 
                 if (ImGui.BeginTabBar("MyTabBar", ImGuiTabBarFlags.None))
@@ -146,7 +146,7 @@ namespace AetherSenseRedux
 
                             }
                         }
-                        else 
+                        else
                         {
                             if (ImGui.Button("Connect"))
                             {
@@ -166,7 +166,7 @@ namespace AetherSenseRedux
                         ImGui.BeginChild("status", new Vector2(0, 0), true);
                         if (plugin.WaitType == WaitType.Slow_Timer)
                         {
-                            ImGui.TextColored(new Vector4(1,0,0,1), "High resolution timers not available, patterns will be inaccurate.");
+                            ImGui.TextColored(new Vector4(1, 0, 0, 1), "High resolution timers not available, patterns will be inaccurate.");
                         }
                         ImGui.Text("Connection Status:");
                         ImGui.Indent();
@@ -182,7 +182,7 @@ namespace AetherSenseRedux
                             ImGui.Indent();
                             foreach (var device in plugin.ConnectedDevices)
                             {
-                                ImGui.Text(String.Format("{0} - {1}%% [{2}]",device.Key, (int)(device.Value.LastIntensity * 100),(int)device.Value.UPS));
+                                ImGui.Text(String.Format("{0} - {1}%% [{2}]", device.Key, (int)(device.Value.LastIntensity * 100), (int)device.Value.UPS));
                             }
                             ImGui.Unindent();
                         }
@@ -192,10 +192,10 @@ namespace AetherSenseRedux
                     }
                     if (ImGui.BeginTabItem("Triggers"))
                     {
-                        ImGui.BeginChild("leftouter", new Vector2(155,0));
+                        ImGui.BeginChild("leftouter", new Vector2(155, 0));
                         ImGui.Indent(1);
                         ImGui.BeginChild("left", new Vector2(0, -ImGui.GetFrameHeightWithSpacing()), true);
-                            
+
                         foreach (var (t, i) in WorkingCopy.Triggers.Select((value, i) => (value, i)))
                         {
                             ImGui.PushID(i); // We push the iterator to the ID stack so multiple triggers of the same type and name are still distinct
@@ -227,14 +227,14 @@ namespace AetherSenseRedux
 
                         ImGui.EndChild();
                         ImGui.SameLine();
-                            
+
                         ImGui.BeginChild("right", new Vector2(0, 0), false);
                         ImGui.Indent(1);
                         if (WorkingCopy.Triggers.Count == 0)
                         {
                             ImGui.Text("Use the Add New button to add a trigger.");
 
-                        } 
+                        }
                         else
                         {
                             DrawChatTriggerConfig(WorkingCopy.Triggers[SelectedTrigger]);
@@ -264,7 +264,7 @@ namespace AetherSenseRedux
                 ImGui.Unindent(1); //for some reason the UI likes to cut off a pixel on the left side if we don't do this
 
                 ImGui.EndChild();
-                
+
                 ////
                 ////    FOOTER
                 ////
@@ -304,7 +304,7 @@ namespace AetherSenseRedux
                     }
                     catch (Exception ex)
                     {
-                        Plugin.PluginLog.Error(ex, "Could not restore configuration.");
+                        Service.PluginLog.Error(ex, "Could not restore configuration.");
                     }
 
                 }
@@ -332,8 +332,8 @@ namespace AetherSenseRedux
         {
             if (ImGui.BeginTabBar("TriggerConfig", ImGuiTabBarFlags.None))
             {
-                
-                
+
+
                 DrawChatTriggerBasicTab(t);
 
                 DrawTriggerDevicesTab(t);
@@ -344,8 +344,8 @@ namespace AetherSenseRedux
                 }
 
                 DrawTriggerPatternTab(t);
-                
-                
+
+
                 ImGui.EndTabBar();
             }
         }

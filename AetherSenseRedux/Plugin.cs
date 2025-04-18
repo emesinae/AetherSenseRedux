@@ -21,11 +21,7 @@ namespace AetherSenseRedux
 {
     public sealed class Plugin : IDalamudPlugin
     {
-        [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
-        [PluginService] internal static ITextureProvider TextureProvider { get; private set; } = null!;
-        [PluginService] internal static ICommandManager CommandManager { get; private set; } = null!;
-        [PluginService] internal static IPluginLog PluginLog { get; private set; } = null!;
-        [PluginService] private IChatGui ChatGui { get; init; } = null!;
+        [PluginService] private static IDalamudPluginInterface PluginInterface { get; set; } = null!;
 
         private const string commandName = "/asr";
 
@@ -72,7 +68,7 @@ namespace AetherSenseRedux
                 }
                 catch (Exception ex)
                 {
-                    PluginLog.Error(ex, "error when getting status");
+                    Service.PluginLog.Error(ex, "error when getting status");
                     return ButtplugStatus.Error;
                 }
 
@@ -138,9 +134,13 @@ namespace AetherSenseRedux
         /// <param name="commandManager"></param>
         public Plugin()
         {
-            var t = DoBenchmark();
-
             PluginInterface.Inject(this);
+            PluginInterface.Create<Service>();
+
+            Service.Plugin = this;
+            Service.PluginInterface = PluginInterface;
+
+            var t = DoBenchmark();
 
             this.DevicePool = new List<Device>();
             this.ChatTriggerPool = new List<ChatTrigger>();
@@ -166,7 +166,7 @@ namespace AetherSenseRedux
 
             PluginUi = new PluginUI(Configuration, this);
 
-            CommandManager.AddHandler(commandName, new CommandInfo(OnShowUI)
+            Service.CommandManager.AddHandler(commandName, new CommandInfo(OnShowUI)
             {
                 HelpMessage = "Opens the Aether Sense Redux configuration window"
             });
@@ -185,7 +185,7 @@ namespace AetherSenseRedux
         {
             Stop(true);
             PluginUi.Dispose();
-            CommandManager.RemoveHandler(commandName);
+            Service.CommandManager.RemoveHandler(commandName);
         }
 
         // EVENT HANDLERS
@@ -197,7 +197,7 @@ namespace AetherSenseRedux
         private void OnDeviceAdded(object? sender, DeviceAddedEventArgs e)
         {
 
-            PluginLog.Information("Device {0} added", e.Device.Name);
+            Service.PluginLog.Information("Device {0} added", e.Device.Name);
             Device newDevice = new(e.Device, WaitType);
             this.DevicePool.Add(newDevice);
             if (!Configuration.SeenDevices.Contains(newDevice.Name))
@@ -219,7 +219,7 @@ namespace AetherSenseRedux
             {
                 return;
             }
-            PluginLog.Information("Device {0} removed", e.Device.Name);
+            Service.PluginLog.Information("Device {0} removed", e.Device.Name);
             var toRemove = new List<Device>();
             lock (this.DevicePool)
             {
@@ -233,7 +233,7 @@ namespace AetherSenseRedux
                         }
                         catch (Exception ex)
                         {
-                            PluginLog.Error(ex, "Could not stop device {0}, device disconnected?", device.Name);
+                            Service.PluginLog.Error(ex, "Could not stop device {0}, device disconnected?", device.Name);
                         }
                         toRemove.Add(device);
                         device.Dispose();
@@ -273,7 +273,7 @@ namespace AetherSenseRedux
             }
 
             Stop(false);
-            PluginLog.Error("Unexpected disconnect.");
+            Service.PluginLog.Error("Unexpected disconnect.");
         }
 
         private void OnChatReceived(XivChatType type, int timestamp, ref SeString sender, ref SeString message, ref bool isHandled)
@@ -285,7 +285,7 @@ namespace AetherSenseRedux
             }
             if (Configuration.LogChat)
             {
-                PluginLog.Debug(chatMessage.ToString());
+                Service.PluginLog.Debug(chatMessage.ToString());
             }
         }
 
@@ -337,7 +337,7 @@ namespace AetherSenseRedux
             }
             catch (Exception ex)
             {
-                PluginLog.Error(ex, "Asynchronous scanning failed.");
+                Service.PluginLog.Error(ex, "Asynchronous scanning failed.");
             }
         }
         // END SOME FUNCTIONS THAT DO THINGS
@@ -370,7 +370,7 @@ namespace AetherSenseRedux
                 }
                 catch (Exception ex)
                 {
-                    PluginLog.Error(ex, "Buttplug failed to connect.");
+                    Service.PluginLog.Error(ex, "Buttplug failed to connect.");
                     LastException = ex;
                     Stop(false);
                 }
@@ -378,7 +378,7 @@ namespace AetherSenseRedux
 
             if (Connected)
             {
-                PluginLog.Information("Buttplug connected.");
+                Service.PluginLog.Information("Buttplug connected.");
                 _status = ButtplugStatus.Connected;
             }
 
@@ -396,11 +396,11 @@ namespace AetherSenseRedux
                 {
                     var t = Buttplug!.DisconnectAsync();
                     t.Wait();
-                    PluginLog.Information("Buttplug disconnected.");
+                    Service.PluginLog.Information("Buttplug disconnected.");
                 }
                 catch (Exception ex)
                 {
-                    PluginLog.Error(ex, "Buttplug failed to disconnect.");
+                    Service.PluginLog.Error(ex, "Buttplug failed to disconnect.");
                 }
             }
         }
@@ -414,13 +414,13 @@ namespace AetherSenseRedux
             {
                 foreach (Device device in DevicePool)
                 {
-                    PluginLog.Debug("Stopping device {0}", device.Name);
+                    Service.PluginLog.Debug("Stopping device {0}", device.Name);
                     device.Stop();
                     device.Dispose();
                 }
                 DevicePool.Clear();
             }
-            PluginLog.Debug("Devices destroyed.");
+            Service.PluginLog.Debug("Devices destroyed.");
         }
 
         /// <summary>
@@ -437,7 +437,7 @@ namespace AetherSenseRedux
             _status = ButtplugStatus.Disconnected;
             Buttplug.Dispose();
             Buttplug = null;
-            PluginLog.Debug("Buttplug destroyed.");
+            Service.PluginLog.Debug("Buttplug destroyed.");
         }
 
         /// <summary>
@@ -447,12 +447,12 @@ namespace AetherSenseRedux
         {
             foreach (ChatTrigger t in ChatTriggerPool)
             {
-                PluginLog.Debug("Stopping chat trigger {0}", t.Name);
+                Service.PluginLog.Debug("Stopping chat trigger {0}", t.Name);
                 t.Stop();
             }
-            ChatGui.ChatMessage -= OnChatReceived;
+            Service.ChatGui.ChatMessage -= OnChatReceived;
             ChatTriggerPool.Clear();
-            PluginLog.Debug("Triggers destroyed.");
+            Service.PluginLog.Debug("Triggers destroyed.");
         }
 
         /// <summary>
@@ -472,18 +472,18 @@ namespace AetherSenseRedux
                 }
                 else
                 {
-                    PluginLog.Error("Invalid trigger type {0} created.", Trigger.Type);
+                    Service.PluginLog.Error("Invalid trigger type {0} created.", Trigger.Type);
                 }
             }
 
             foreach (ChatTrigger t in ChatTriggerPool)
             {
-                PluginLog.Debug("Starting chat trigger {0}", t.Name);
+                Service.PluginLog.Debug("Starting chat trigger {0}", t.Name);
                 t.Start();
             }
 
-            ChatGui.ChatMessage += OnChatReceived;
-            PluginLog.Debug("Triggers created");
+            Service.ChatGui.ChatMessage += OnChatReceived;
+            Service.PluginLog.Debug("Triggers created");
         }
 
         /// <summary>
@@ -547,10 +547,10 @@ namespace AetherSenseRedux
             long sum = 0;
             double[] averages = new double[2];
             Stopwatch timer = new();
-            PluginLog.Information("Starting benchmark");
+            Service.PluginLog.Information("Starting benchmark");
 
 
-            PluginLog.Debug("Testing Task.Delay");
+            Service.PluginLog.Debug("Testing Task.Delay");
 
             for (int i = 0; i < times.Length; i++)
             {
@@ -560,13 +560,13 @@ namespace AetherSenseRedux
             }
             foreach (long t in times)
             {
-                PluginLog.Debug("{0}", t);
+                Service.PluginLog.Debug("{0}", t);
                 sum += t;
             }
             averages[0] = (double)sum / times.Length / 10000;
-            PluginLog.Debug("Average: {0}", averages[0]);
+            Service.PluginLog.Debug("Average: {0}", averages[0]);
 
-            PluginLog.Debug("Testing Thread.Sleep");
+            Service.PluginLog.Debug("Testing Thread.Sleep");
             times = new long[10];
             for (int i = 0; i < times.Length; i++)
             {
@@ -577,11 +577,11 @@ namespace AetherSenseRedux
             sum = 0;
             foreach (long t in times)
             {
-                PluginLog.Debug("{0}", t);
+                Service.PluginLog.Debug("{0}", t);
                 sum += t;
             }
             averages[1] = (double)sum / times.Length / 10000;
-            PluginLog.Debug("Average: {0}", averages[1]);
+            Service.PluginLog.Debug("Average: {0}", averages[1]);
 
             if (averages[0] < 3)
             {
@@ -597,13 +597,13 @@ namespace AetherSenseRedux
             switch (result)
             {
                 case WaitType.Use_Delay:
-                    PluginLog.Information("High resolution Task.Delay found, using delay in timing loops.");
+                    Service.PluginLog.Information("High resolution Task.Delay found, using delay in timing loops.");
                     break;
                 case WaitType.Use_Sleep:
-                    PluginLog.Information("High resolution Thread.Sleep found, using sleep in timing loops.");
+                    Service.PluginLog.Information("High resolution Thread.Sleep found, using sleep in timing loops.");
                     break;
                 default:
-                    PluginLog.Information("No high resolution, CPU-friendly waits available, timing loops will be inaccurate.");
+                    Service.PluginLog.Information("No high resolution, CPU-friendly waits available, timing loops will be inaccurate.");
                     break;
             }
 
@@ -613,4 +613,3 @@ namespace AetherSenseRedux
 
     }
 }
-    

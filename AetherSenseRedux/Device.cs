@@ -41,7 +41,7 @@ namespace AetherSenseRedux
             }
         }
 
-        public Device(ButtplugClientDevice clientDevice,WaitType waitType)
+        public Device(ButtplugClientDevice clientDevice, WaitType waitType)
         {
             ClientDevice = clientDevice;
             Patterns = new List<IPattern>();
@@ -108,10 +108,10 @@ namespace AetherSenseRedux
                             break;
                     }
 
-                } 
+                }
                 else
                 {
-                    Plugin.PluginLog.Verbose("OnTick for device {0} took {1}ms too long!", Name, t - frameTime);
+                    Service.PluginLog.Verbose("OnTick for device {0} took {1}ms too long!", Name, t - frameTime);
                 }
                 _ups = _ups * 0.9 + timer.ElapsedMilliseconds * 0.1;
             }
@@ -186,7 +186,8 @@ namespace AetherSenseRedux
             {
                 await ClientDevice.VibrateAsync(clampedIntensity);
 
-            } catch (Exception)
+            }
+            catch (Exception)
             {
                 // Connecting to an intiface server on Linux will spam the log with bluez errors
                 // so we just ignore all exceptions from this statement. Good? Probably not. Necessary? Yes.
