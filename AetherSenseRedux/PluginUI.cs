@@ -155,13 +155,6 @@ namespace AetherSenseRedux
                             }
                         }
 
-                        //if (ImGui.Button(plugin.Scanning ? "Scanning..." : "Scan Now")){
-                        //    if (!plugin.Scanning)
-                        //    {
-                        //        Task.Run(plugin.DoScan);
-                        //    }
-                        //}
-
                         ImGui.Spacing();
                         ImGui.BeginChild("status", new Vector2(0, 0), true);
                         if (plugin.WaitType == WaitType.Slow_Timer)
@@ -313,12 +306,6 @@ namespace AetherSenseRedux
                     ImGui.SetTooltip("Discard all changes and reload the configuration from disk.");
                 }
                 // end revert button
-
-                //ImGui.SameLine();
-                //if (ImGui.Button("Run Benchmark"))
-                //{
-                //    var t = Plugin.DoBenchmark();
-                //}
             }
 
             ImGui.End();

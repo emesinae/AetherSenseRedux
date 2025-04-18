@@ -1,7 +1,6 @@
 ﻿using Dalamud.Game.Command;
 using Dalamud.IoC;
 using Dalamud.Plugin;
-using Dalamud.Plugin.Services;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 
@@ -14,8 +13,8 @@ using Buttplug.Client.Connectors.WebsocketConnector;
 using AetherSenseRedux.Trigger;
 using AetherSenseRedux.Pattern;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
-using Dalamud.Interface.Windowing;
 
 namespace AetherSenseRedux
 {
@@ -23,11 +22,9 @@ namespace AetherSenseRedux
     {
         [PluginService] private static IDalamudPluginInterface PluginInterface { get; set; } = null!;
 
-        private const string commandName = "/asr";
+        private const string CommandName = "/asr";
 
-        public Configuration Configuration { get; set; }
-
-        public string Name => "AetherSense Redux";
+        private Configuration Configuration { get; set; }
 
         private ButtplugStatus _status;
 
@@ -37,11 +34,11 @@ namespace AetherSenseRedux
             {
                 try
                 {
-                    if (Buttplug == null)
+                    if (_buttplug == null)
                     {
                         return ButtplugStatus.Uninitialized;
                     }
-                    else if (Buttplug.Connected && _status == ButtplugStatus.Connected)
+                    else if (_buttplug.Connected && _status == ButtplugStatus.Connected)
                     {
                         return ButtplugStatus.Connected;
                     }
@@ -49,7 +46,7 @@ namespace AetherSenseRedux
                     {
                         return ButtplugStatus.Connecting;
                     }
-                    else if (!Buttplug.Connected && _status == ButtplugStatus.Connected)
+                    else if (!_buttplug.Connected && _status == ButtplugStatus.Connected)
                     {
                         return ButtplugStatus.Error;
                     }
@@ -80,7 +77,7 @@ namespace AetherSenseRedux
         {
             get
             {
-                if (Buttplug == null)
+                if (_buttplug == null)
                 {
                     return false;
                 }
@@ -90,27 +87,18 @@ namespace AetherSenseRedux
             }
         }
 
-        private bool Connected
-        {
-            get
-            {
-                if (Buttplug != null)
-                {
-                    return Buttplug.Connected;
-                }
-                return false;
-            }
-        }
+        private bool Connected => _buttplug?.Connected ?? false;
 
         public Dictionary<string, DeviceStatus> ConnectedDevices
         {
             get
             {
                 Dictionary<string, DeviceStatus> result = new();
-                foreach (Device device in DevicePool)
+                foreach (var device in _devicePool)
                 {
                     result[device.Name] = device.Status;
                 }
+
                 return result;
             }
         }
@@ -121,17 +109,15 @@ namespace AetherSenseRedux
 
         private PluginUI PluginUi { get; init; }
 
-        private ButtplugClient? Buttplug;
+        private ButtplugClient? _buttplug;
 
-        private List<Device> DevicePool;
+        private List<Device> _devicePool;
 
-        private readonly List<ChatTrigger> ChatTriggerPool;
+        private readonly List<ChatTrigger> _chatTriggerPool;
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="pluginInterface"></param>
-        /// <param name="commandManager"></param>
         public Plugin()
         {
             PluginInterface.Inject(this);
@@ -142,11 +128,10 @@ namespace AetherSenseRedux
 
             var t = DoBenchmark();
 
-            this.DevicePool = new List<Device>();
-            this.ChatTriggerPool = new List<ChatTrigger>();
+            this._devicePool = [];
+            this._chatTriggerPool = [];
 
             Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
-
             Configuration.FixDeserialization();
 
             _status = ButtplugStatus.Disconnected;
@@ -166,7 +151,7 @@ namespace AetherSenseRedux
 
             PluginUi = new PluginUI(Configuration, this);
 
-            Service.CommandManager.AddHandler(commandName, new CommandInfo(OnShowUI)
+            Service.CommandManager.AddHandler(CommandName, new CommandInfo(OnShowUI)
             {
                 HelpMessage = "Opens the Aether Sense Redux configuration window"
             });
@@ -185,7 +170,7 @@ namespace AetherSenseRedux
         {
             Stop(true);
             PluginUi.Dispose();
-            Service.CommandManager.RemoveHandler(commandName);
+            Service.CommandManager.RemoveHandler(CommandName);
         }
 
         // EVENT HANDLERS
@@ -199,7 +184,10 @@ namespace AetherSenseRedux
 
             Service.PluginLog.Information("Device {0} added", e.Device.Name);
             Device newDevice = new(e.Device, WaitType);
-            this.DevicePool.Add(newDevice);
+            lock (this._devicePool)
+            {
+                this._devicePool.Add(newDevice);
+            }
             if (!Configuration.SeenDevices.Contains(newDevice.Name))
             {
                 Configuration.SeenDevices.Add(newDevice.Name);
@@ -221,30 +209,27 @@ namespace AetherSenseRedux
             }
             Service.PluginLog.Information("Device {0} removed", e.Device.Name);
             var toRemove = new List<Device>();
-            lock (this.DevicePool)
+            lock (this._devicePool)
             {
-                foreach (Device device in this.DevicePool)
+                foreach (var device in this._devicePool.Where(device => device.ClientDevice == e.Device))
                 {
-                    if (device.ClientDevice == e.Device)
+                    try
                     {
-                        try
-                        {
-                            device.Stop();
-                        }
-                        catch (Exception ex)
-                        {
-                            Service.PluginLog.Error(ex, "Could not stop device {0}, device disconnected?", device.Name);
-                        }
-                        toRemove.Add(device);
-                        device.Dispose();
+                        device.Stop();
                     }
+                    catch (Exception ex)
+                    {
+                        Service.PluginLog.Error(ex, "Could not stop device {0}, device disconnected?", device.Name);
+                    }
+                    toRemove.Add(device);
+                    device.Dispose();
                 }
             }
-            foreach (Device device in toRemove)
+            foreach (var device in toRemove)
             {
-                lock (this.DevicePool)
+                lock (this._devicePool)
                 {
-                    this.DevicePool.Remove(device);
+                    this._devicePool.Remove(device);
                 }
 
             }
@@ -279,7 +264,7 @@ namespace AetherSenseRedux
         private void OnChatReceived(XivChatType type, int timestamp, ref SeString sender, ref SeString message, ref bool isHandled)
         {
             ChatMessage chatMessage = new(type, timestamp, ref sender, ref message, ref isHandled);
-            foreach (ChatTrigger t in ChatTriggerPool)
+            foreach (var t in _chatTriggerPool)
             {
                 t.Queue(chatMessage);
             }
@@ -313,9 +298,9 @@ namespace AetherSenseRedux
                 return;
             }
 
-            lock (DevicePool)
+            lock (_devicePool)
             {
-                foreach (var device in this.DevicePool)
+                foreach (var device in this._devicePool)
                 {
                     lock (device.Patterns)
                     {
@@ -329,11 +314,11 @@ namespace AetherSenseRedux
         /// 
         /// </summary>
         /// <returns>The task associated with this method.</returns>
-        public async Task DoScan()
+        private async Task DoScan()
         {
             try
             {
-                await Buttplug!.StartScanningAsync();
+                await _buttplug!.StartScanningAsync();
             }
             catch (Exception ex)
             {
@@ -351,13 +336,13 @@ namespace AetherSenseRedux
             LastException = null;
             _status = ButtplugStatus.Connecting;
 
-            if (Buttplug == null)
+            if (_buttplug == null)
             {
-                Buttplug = new ButtplugClient("AetherSense Redux");
-                Buttplug.DeviceAdded += OnDeviceAdded;
-                Buttplug.DeviceRemoved += OnDeviceRemoved;
-                Buttplug.ScanningFinished += OnScanComplete;
-                Buttplug.ServerDisconnect += OnServerDisconnect;
+                _buttplug = new ButtplugClient("AetherSense Redux");
+                _buttplug.DeviceAdded += OnDeviceAdded;
+                _buttplug.DeviceRemoved += OnDeviceRemoved;
+                _buttplug.ScanningFinished += OnScanComplete;
+                _buttplug.ServerDisconnect += OnServerDisconnect;
             }
 
             if (!Connected)
@@ -365,8 +350,8 @@ namespace AetherSenseRedux
                 try
                 {
                     ButtplugWebsocketConnector wsOptions = new(new Uri(Configuration.Address));
-                    await Buttplug.ConnectAsync(wsOptions);
-                    var t = DoScan();
+                    await _buttplug.ConnectAsync(wsOptions);
+                    _ = DoScan();
                 }
                 catch (Exception ex)
                 {
@@ -394,7 +379,7 @@ namespace AetherSenseRedux
                 _status = ButtplugStatus.Disconnecting;
                 try
                 {
-                    var t = Buttplug!.DisconnectAsync();
+                    var t = _buttplug!.DisconnectAsync();
                     t.Wait();
                     Service.PluginLog.Information("Buttplug disconnected.");
                 }
@@ -410,15 +395,15 @@ namespace AetherSenseRedux
         /// </summary>
         private void CleanDevices()
         {
-            lock (DevicePool)
+            lock (_devicePool)
             {
-                foreach (Device device in DevicePool)
+                foreach (var device in _devicePool)
                 {
                     Service.PluginLog.Debug("Stopping device {0}", device.Name);
                     device.Stop();
                     device.Dispose();
                 }
-                DevicePool.Clear();
+                _devicePool.Clear();
             }
             Service.PluginLog.Debug("Devices destroyed.");
         }
@@ -428,15 +413,15 @@ namespace AetherSenseRedux
         /// </summary>
         private void CleanButtplug()
         {
-            if (Buttplug == null)
+            if (_buttplug == null)
             {
                 _status = ButtplugStatus.Disconnected;
                 return;
             }
 
             _status = ButtplugStatus.Disconnected;
-            Buttplug.Dispose();
-            Buttplug = null;
+            _buttplug.Dispose();
+            _buttplug = null;
             Service.PluginLog.Debug("Buttplug destroyed.");
         }
 
@@ -445,13 +430,13 @@ namespace AetherSenseRedux
         /// </summary>
         private void CleanTriggers()
         {
-            foreach (ChatTrigger t in ChatTriggerPool)
+            foreach (var t in _chatTriggerPool)
             {
                 Service.PluginLog.Debug("Stopping chat trigger {0}", t.Name);
                 t.Stop();
             }
             Service.ChatGui.ChatMessage -= OnChatReceived;
-            ChatTriggerPool.Clear();
+            _chatTriggerPool.Clear();
             Service.PluginLog.Debug("Triggers destroyed.");
         }
 
@@ -464,19 +449,19 @@ namespace AetherSenseRedux
             {
                 // We pass DevicePool by reference so that triggers don't get stuck with outdated copies
                 // of the device pool, should it be replaced with a new List<Device> - currently this doesn't
-                // happen but it's possible it may happen in the future.
-                var Trigger = TriggerFactory.GetTriggerFromConfig(d, ref DevicePool);
-                if (Trigger.Type == "ChatTrigger")
+                // happen, but it's possible it may happen in the future.
+                var trigger = TriggerFactory.GetTriggerFromConfig(d, ref _devicePool);
+                if (trigger.Type == "ChatTrigger")
                 {
-                    ChatTriggerPool.Add((ChatTrigger)Trigger);
+                    _chatTriggerPool.Add((ChatTrigger)trigger);
                 }
                 else
                 {
-                    Service.PluginLog.Error("Invalid trigger type {0} created.", Trigger.Type);
+                    Service.PluginLog.Error("Invalid trigger type {0} created.", trigger.Type);
                 }
             }
 
-            foreach (ChatTrigger t in ChatTriggerPool)
+            foreach (var t in _chatTriggerPool)
             {
                 Service.PluginLog.Debug("Starting chat trigger {0}", t.Name);
                 t.Start();
@@ -500,11 +485,9 @@ namespace AetherSenseRedux
         /// </summary>
         public void Reload()
         {
-            if (Connected)
-            {
-                CleanTriggers();
-                InitTriggers();
-            }
+            if (!Connected) return;
+            CleanTriggers();
+            InitTriggers();
         }
 
         /// <summary>
@@ -540,25 +523,25 @@ namespace AetherSenseRedux
         /// 
         /// </summary>
         /// <returns></returns>
-        public static async Task<WaitType> DoBenchmark()
+        private static async Task<WaitType> DoBenchmark()
         {
             var result = WaitType.Slow_Timer;
-            long[] times = new long[10];
+            var times = new long[10];
             long sum = 0;
-            double[] averages = new double[2];
+            var averages = new double[2];
             Stopwatch timer = new();
             Service.PluginLog.Information("Starting benchmark");
 
 
             Service.PluginLog.Debug("Testing Task.Delay");
 
-            for (int i = 0; i < times.Length; i++)
+            for (var i = 0; i < times.Length; i++)
             {
                 timer.Restart();
                 await Task.Delay(1);
                 times[i] = timer.Elapsed.Ticks;
             }
-            foreach (long t in times)
+            foreach (var t in times)
             {
                 Service.PluginLog.Debug("{0}", t);
                 sum += t;
@@ -568,14 +551,14 @@ namespace AetherSenseRedux
 
             Service.PluginLog.Debug("Testing Thread.Sleep");
             times = new long[10];
-            for (int i = 0; i < times.Length; i++)
+            for (var i = 0; i < times.Length; i++)
             {
                 timer.Restart();
                 Thread.Sleep(1);
                 times[i] = timer.Elapsed.Ticks;
             }
             sum = 0;
-            foreach (long t in times)
+            foreach (var t in times)
             {
                 Service.PluginLog.Debug("{0}", t);
                 sum += t;
@@ -602,6 +585,7 @@ namespace AetherSenseRedux
                 case WaitType.Use_Sleep:
                     Service.PluginLog.Information("High resolution Thread.Sleep found, using sleep in timing loops.");
                     break;
+                case WaitType.Slow_Timer:
                 default:
                     Service.PluginLog.Information("No high resolution, CPU-friendly waits available, timing loops will be inaccurate.");
                     break;
