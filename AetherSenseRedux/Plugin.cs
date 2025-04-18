@@ -149,7 +149,7 @@ namespace AetherSenseRedux
                 Configuration.LoadDefaults();
             }
 
-            PluginUi = new PluginUI(Configuration, this);
+            PluginUi = new PluginUI(Configuration);
 
             Service.CommandManager.AddHandler(CommandName, new CommandInfo(OnShowUI)
             {
