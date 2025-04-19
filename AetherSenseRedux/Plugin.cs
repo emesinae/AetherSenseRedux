@@ -15,6 +15,7 @@ using AetherSenseRedux.Pattern;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using AetherSenseRedux.Hooks;
 
 namespace AetherSenseRedux
 {
@@ -27,6 +28,8 @@ namespace AetherSenseRedux
         private Configuration Configuration { get; set; }
 
         private ButtplugStatus _status;
+
+        private EmoteReaderHooks _emoteReaderHooks;
 
         public ButtplugStatus Status
         {
@@ -158,6 +161,8 @@ namespace AetherSenseRedux
 
             PluginInterface.UiBuilder.Draw += DrawUI;
             PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
+
+            this._emoteReaderHooks = new EmoteReaderHooks();
 
             t.Wait();
             WaitType = t.Result;
