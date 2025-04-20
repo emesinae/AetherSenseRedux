@@ -16,6 +16,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using AetherSenseRedux.Hooks;
+using AetherSenseRedux.Trigger.Emote;
 
 namespace AetherSenseRedux
 {
@@ -117,6 +118,7 @@ namespace AetherSenseRedux
         private List<Device> _devicePool;
 
         private readonly List<ChatTrigger> _chatTriggerPool;
+        private readonly List<EmoteTrigger> _emoteTriggerPool;
 
         /// <summary>
         /// 
@@ -133,6 +135,7 @@ namespace AetherSenseRedux
 
             this._devicePool = [];
             this._chatTriggerPool = [];
+            this._emoteTriggerPool = [];
 
             Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             Configuration.FixDeserialization();
@@ -162,10 +165,15 @@ namespace AetherSenseRedux
             PluginInterface.UiBuilder.Draw += DrawUI;
             PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
 
+            Service.PluginLog.Info("Adding emote hook");
             this._emoteReaderHooks = new EmoteReaderHooks();
+            this._emoteReaderHooks.OnEmote += OnEmoteReceived;
 
+            Service.PluginLog.Info($"Benchmark task before: {t.Id} {t.Status} {t.Exception?.Message}");
             t.Wait();
+            Service.PluginLog.Info($"Benchmark task after: {t.Id} {t.Status} {t.Exception?.Message}");
             WaitType = t.Result;
+            Service.PluginLog.Info("Plugin init complete");
         }
 
         /// <summary>
@@ -176,6 +184,7 @@ namespace AetherSenseRedux
             Stop(true);
             PluginUi.Dispose();
             Service.CommandManager.RemoveHandler(CommandName);
+            _emoteReaderHooks.Dispose();
         }
 
         // EVENT HANDLERS
@@ -276,6 +285,28 @@ namespace AetherSenseRedux
             if (Configuration.LogChat)
             {
                 Service.PluginLog.Debug(chatMessage.ToString());
+            }
+        }
+
+        private void OnEmoteReceived(EmoteEvent e)
+        {
+            var isPerformer = e.Instigator.GameObjectId == Service.ClientState.LocalPlayer?.GameObjectId;
+            var isTarget = e.Target?.GameObjectId == Service.ClientState.LocalPlayer?.GameObjectId;
+            Service.PluginLog.Debug($"{e.Instigator.Name} performed emote {e.EmoteId}" + (e.Target != null ? $" on target {e.Target.Name}" : string.Empty));
+
+            var emoteLogItem = new EmoteLogItem
+            {
+                Instigator = e.Instigator,
+                Target = e.Target,
+                EmoteId = e.EmoteId,
+                PlayerIsPerformer = isPerformer,
+                PlayerIsTarget = isTarget,
+                Timestamp = new DateTime(),
+            };
+
+            foreach (var trigger in _emoteTriggerPool)
+            {
+                trigger.Queue(emoteLogItem);
             }
         }
 

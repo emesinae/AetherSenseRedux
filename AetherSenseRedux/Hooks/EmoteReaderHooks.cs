@@ -9,97 +9,112 @@
 //  - https://github.com/RokasKil/EmoteLog
 
 
-using Dalamud.Game.ClientState.Objects.SubKinds;
-using Dalamud.Hooking;
 using System;
 using System.Linq;
+using Dalamud.Game.ClientState.Objects.SubKinds;
+using Dalamud.Hooking;
 
-namespace AetherSenseRedux.Hooks
+namespace AetherSenseRedux.Hooks;
+
+public class EmoteReaderHooks : IDisposable
 {
-    public class EmoteReaderHooks : IDisposable
+    public delegate void EmoteDelegate(EmoteEvent e);
+
+    private readonly Hook<OnEmoteFuncDelegate> hookEmote;
+
+    public EmoteReaderHooks()
     {
-        public delegate void EmoteDelegate(EmoteEvent e);
+        Service.PluginLog.Verbose("Before hook setup");
+        hookEmote = Service.GameInteropProvider.HookFromSignature<OnEmoteFuncDelegate>(
+            "E8 ?? ?? ?? ?? 48 8D 8B ?? ?? ?? ?? 4C 89 74 24", OnEmoteDetour);
+        Service.PluginLog.Verbose("Before hook enable");
+        hookEmote.Enable();
+        Service.PluginLog.Verbose("Hook enabled");
+    }
 
-        public event EmoteDelegate? OnEmote;
+    public void Dispose()
+    {
+        Service.PluginLog.Verbose("Emote reader dispose started");
+        hookEmote.Dispose();
+        GC.SuppressFinalize(this);
+        Service.PluginLog.Verbose("Emote reader dispose complete");
+    }
 
-        private delegate void OnEmoteFuncDelegate(ulong unk, ulong instigatorAddr, ushort emoteId, ulong targetId,
-            ulong unk2);
+    public event EmoteDelegate? OnEmote;
 
-        private readonly Hook<OnEmoteFuncDelegate> hookEmote;
+    ~EmoteReaderHooks()
+    {
+        Service.PluginLog.Verbose("Emote reader destructor started");
+        hookEmote.Dispose();
+        Service.PluginLog.Verbose("Emote reader destructor complete");
+    }
 
-        public EmoteReaderHooks()
+    private void OnEmoteDetour(ulong unk, ulong instigatorAddr, ushort emoteId, ulong targetId, ulong unk2)
+    {
+        // unk - some field of event framework singleton? doesn't matter here anyway
+        Service.PluginLog.Verbose(
+            $"Emote >> unk:{unk:X}, instigatorAddr:{instigatorAddr:X}, emoteId:{emoteId}, targetId:{targetId:X}, unk2:{unk2:X}, player:{Service.ClientState.LocalPlayer?.GameObjectId:X}");
+
+        if (Service.ClientState.LocalPlayer != null)
         {
-            hookEmote = Service.GameInteropProvider.HookFromSignature<OnEmoteFuncDelegate>(
-                "E8 ?? ?? ?? ?? 48 8D 8B ?? ?? ?? ?? 4C 89 74 24", OnEmoteDetour);
-            hookEmote.Enable();
-        }
-
-        public void Dispose()
-        {
-            hookEmote?.Dispose();
-        }
-
-        private void OnEmoteDetour(ulong unk, ulong instigatorAddr, ushort emoteId, ulong targetId, ulong unk2)
-        {
-            // unk - some field of event framework singleton? doesn't matter here anyway
-            Service.PluginLog.Info(
-                $"Emote >> unk:{unk:X}, instigatorAddr:{instigatorAddr:X}, emoteId:{emoteId}, targetId:{targetId:X}, unk2:{unk2:X}, player:{Service.ClientState.LocalPlayer?.GameObjectId:X}");
-
-            if (Service.ClientState.LocalPlayer != null)
+            var instigatorOb = Service.ObjectTable.FirstOrDefault(x => (ulong)x.Address == instigatorAddr);
+            if (instigatorOb is IPlayerCharacter playerCharacter)
             {
-                var instigatorOb = Service.ObjectTable.FirstOrDefault(x => (ulong)x.Address == instigatorAddr);
-                if (instigatorOb is IPlayerCharacter playerCharacter)
+                // If a remote player performed the emote while targeting the local player
+                if (targetId == Service.ClientState.LocalPlayer.GameObjectId)
                 {
-                    // If a remote player performed the emote while targeting the local player
-                    if (targetId == Service.ClientState.LocalPlayer.GameObjectId)
+                    Service.PluginLog.Debug(
+                        $"Player {instigatorOb.Name} used emote {emoteId} on target {Service.ClientState.LocalPlayer.Name} ({targetId:X})");
+                    OnEmote?.Invoke(new EmoteEvent
                     {
-                        Service.PluginLog.Debug($"Player {instigatorOb.Name} used emote {emoteId} on target {Service.ClientState.LocalPlayer.Name} ({targetId:X})");
-                        OnEmote?.Invoke(new EmoteEvent
-                        {
-                            EmoteId = emoteId,
-                            Instigator = playerCharacter,
-                            Target = Service.ClientState.LocalPlayer
-                        });
-                    }
-                    // If the local player performed the emote
-                    else if (instigatorOb.GameObjectId == Service.ClientState.LocalPlayer.GameObjectId)
+                        EmoteId = emoteId,
+                        Instigator = playerCharacter,
+                        Target = Service.ClientState.LocalPlayer
+                    });
+                }
+                // If the local player performed the emote
+                else if (instigatorOb.GameObjectId == Service.ClientState.LocalPlayer.GameObjectId)
+                {
+                    var targetOb = targetId != 0xE0000000
+                        ? Service.ObjectTable.FirstOrDefault(x => x.GameObjectId == targetId)
+                        : null;
+
+                    Service.PluginLog.Debug(
+                        $"Local player {instigatorOb.Name} used emote {emoteId}" + (targetOb != null
+                            ? $" on target {targetOb.Name} ({targetId:X})"
+                            : string.Empty));
+
+                    OnEmote?.Invoke(new EmoteEvent
                     {
-                        var targetOb = targetId != 0xE0000000
-                            ? Service.ObjectTable.FirstOrDefault(x => (ulong)x.GameObjectId == targetId)
-                            : null;
-
-                        Service.PluginLog.Debug(
-                            $"Local player {instigatorOb.Name} used emote {emoteId} on target {targetOb?.Name?.ToString() ?? "NONE"} ({targetId:X})");
-
-                        OnEmote?.Invoke(new EmoteEvent
-                        {
-                            EmoteId = emoteId,
-                            Instigator = Service.ClientState.LocalPlayer,
-                            Target = (targetOb is IPlayerCharacter targetPc) ? targetPc : null
-                        });
-                    }
+                        EmoteId = emoteId,
+                        Instigator = Service.ClientState.LocalPlayer,
+                        Target = targetOb is IPlayerCharacter targetPc ? targetPc : null
+                    });
                 }
             }
-
-            hookEmote.Original(unk, instigatorAddr, emoteId, targetId, unk2);
         }
+
+        hookEmote.Original(unk, instigatorAddr, emoteId, targetId, unk2);
     }
 
-    public class EmoteEvent
-    {
-        /// <summary>
-        /// The character which performed the emote.
-        /// </summary>
-        public IPlayerCharacter Instigator { get; set; }
+    private delegate void OnEmoteFuncDelegate(ulong unk, ulong instigatorAddr, ushort emoteId, ulong targetId,
+        ulong unk2);
+}
 
-        /// <summary>
-        /// The character who was the target of the emote.
-        /// </summary>
-        public IPlayerCharacter? Target { get; set; } = null;
+public class EmoteEvent
+{
+    /// <summary>
+    ///     The character which performed the emote.
+    /// </summary>
+    public required IPlayerCharacter Instigator { get; set; }
 
-        /// <summary>
-        /// The emote ID.
-        /// </summary>
-        public ushort EmoteId { get; set; }
-    }
+    /// <summary>
+    ///     The character who was the target of the emote.
+    /// </summary>
+    public IPlayerCharacter? Target { get; set; }
+
+    /// <summary>
+    ///     The emote ID.
+    /// </summary>
+    public ushort EmoteId { get; set; }
 }
