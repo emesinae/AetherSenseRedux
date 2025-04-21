@@ -471,8 +471,15 @@ namespace AetherSenseRedux
                 Service.PluginLog.Debug("Stopping chat trigger {0}", t.Name);
                 t.Stop();
             }
+
+            foreach (var t in _emoteTriggerPool)
+            {
+                Service.PluginLog.Debug("Stopping emote trigger {0}", t.Name);
+                t.Stop();
+            }
             Service.ChatGui.ChatMessage -= OnChatReceived;
             _chatTriggerPool.Clear();
+            _emoteTriggerPool.Clear();
             Service.PluginLog.Debug("Triggers destroyed.");
         }
 
@@ -491,6 +498,10 @@ namespace AetherSenseRedux
                 {
                     _chatTriggerPool.Add((ChatTrigger)trigger);
                 }
+                else if (trigger.Type == "EmoteTrigger")
+                {
+                    _emoteTriggerPool.Add((EmoteTrigger)trigger);
+                }
                 else
                 {
                     Service.PluginLog.Error("Invalid trigger type {0} created.", trigger.Type);
@@ -500,6 +511,12 @@ namespace AetherSenseRedux
             foreach (var t in _chatTriggerPool)
             {
                 Service.PluginLog.Debug("Starting chat trigger {0}", t.Name);
+                t.Start();
+            }
+
+            foreach (var t in _emoteTriggerPool)
+            {
+                Service.PluginLog.Debug("Starting emote trigger {0}", t.Name);
                 t.Start();
             }
 

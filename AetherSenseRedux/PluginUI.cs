@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using AetherSenseRedux.Trigger.Emote;
+using Dalamud.Interface.Colors;
 using XIVChatTypes;
 
 namespace AetherSenseRedux
@@ -196,12 +198,29 @@ namespace AetherSenseRedux
 
                         ImGui.EndChild();
                         if (ImGui.Button("Add New"))
+                            ImGui.OpenPopup("SelectTriggerTypePopup");
+
+                        if (ImGui.BeginPopup("SelectTriggerTypePopup"))
                         {
                             var triggers = _workingCopy.Triggers;
-                            triggers.Add(new ChatTriggerConfig()
+
+                            if (ImGui.Selectable("Chat Trigger"))
                             {
-                                PatternSettings = new ConstantPatternConfig()
-                            });
+                                triggers.Add(new ChatTriggerConfig()
+                                {
+                                    PatternSettings = new ConstantPatternConfig()
+                                });
+                            }
+
+                            if (ImGui.Selectable("Emote Trigger"))
+                            {
+                                triggers.Add(new EmoteTriggerConfig()
+                                {
+                                    PatternSettings = new ConstantPatternConfig()
+                                });
+                            }
+
+                            ImGui.EndPopup();
                         }
                         ImGui.SameLine();
                         if (ImGui.Button("Remove"))
@@ -225,7 +244,7 @@ namespace AetherSenseRedux
                         }
                         else
                         {
-                            DrawChatTriggerConfig(_workingCopy.Triggers[_selectedTrigger]);
+                            DrawTriggerConfig(_workingCopy.Triggers[_selectedTrigger]);
                         }
                         ImGui.Unindent();
                         ImGui.EndChild();
@@ -306,6 +325,22 @@ namespace AetherSenseRedux
             ImGui.End();
         }
 
+        private void DrawTriggerConfig(dynamic t)
+        {
+            switch (t)
+            {
+                case ChatTriggerConfig config:
+                    DrawChatTriggerConfig(config);
+                    break;
+                case EmoteTriggerConfig config:
+                    DrawEmoteTriggerConfig(config);
+                    break;
+                default:
+                    Service.PluginLog.Error($"Trigger type {t.Type} is not supported.");
+                    break;
+            }
+        }
+
         /// <summary>
         /// Draws the configuration interface for chat triggers
         /// </summary>
@@ -368,6 +403,81 @@ namespace AetherSenseRedux
                 if (ImGui.Checkbox("Use Filters", ref usefilter))
                 {
                     t.UseFilter = usefilter;
+                }
+
+                ImGui.EndTabItem();
+            }
+        }
+
+        /// <summary>
+        /// Draws the configuration interface for chat triggers
+        /// </summary>
+        /// <param name="t">A ChatTriggerConfig object containing the current configuration for the trigger.</param>
+        private void DrawEmoteTriggerConfig(EmoteTriggerConfig t)
+        {
+            if (ImGui.BeginTabBar("TriggerConfig", ImGuiTabBarFlags.None))
+            {
+                DrawEmoteTriggerBasicTab(t);
+                DrawTriggerDevicesTab(t);
+                DrawTriggerPatternTab(t);
+
+                ImGui.EndTabBar();
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="t"></param>
+        private void DrawEmoteTriggerBasicTab(EmoteTriggerConfig t)
+        {
+            if (ImGui.BeginTabItem("Basic"))
+            {
+
+                //begin name field
+                var name = t.Name;
+                if (ImGui.InputText("Name", ref name, 64))
+                {
+                    t.Name = name;
+                }
+                //end name field
+
+                //begin emote ID field
+                int emoteId = t.EmoteIds.FirstOrDefault();
+                if (ImGui.InputInt("Emote ID", ref emoteId))
+                {
+                    if (emoteId < 0 || emoteId >= ushort.MaxValue)
+                    {
+                        ImGui.TextColored(ImGuiColors.DalamudRed, $"Emote ID must be between 1 and {ushort.MaxValue}");
+                    }
+                    else if (emoteId > 0)
+                    {
+                        if (emoteId != (ushort)emoteId)
+                        {
+                            Service.PluginLog.Error($"Cast of int value {emoteId} to ushort produced value {(ushort)emoteId}, but both values should be equal.");
+                        }
+                        t.EmoteIds = [(ushort)emoteId];
+                    }
+                }
+                //end emote ID field
+
+                //begin retrigger delay field
+                var retriggerDelay = (int)t.RetriggerDelay;
+                if (ImGui.InputInt("Retrigger Delay (ms)", ref retriggerDelay))
+                {
+                    t.RetriggerDelay = retriggerDelay;
+                }
+                //end retrigger delay field
+
+                var triggerOnPerform = t.TriggerOnPerform;
+                if (ImGui.Checkbox("Trigger when Performer", ref triggerOnPerform))
+                {
+                    t.TriggerOnPerform = triggerOnPerform;
+                }
+                var triggerOnTarget = t.TriggerOnTarget;
+                if (ImGui.Checkbox("Trigger when Target", ref triggerOnTarget))
+                {
+                    t.TriggerOnTarget = triggerOnTarget;
                 }
 
                 ImGui.EndTabItem();
