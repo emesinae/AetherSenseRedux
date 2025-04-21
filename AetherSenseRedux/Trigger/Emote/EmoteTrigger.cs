@@ -107,8 +107,7 @@ internal class EmoteTrigger : ITrigger
     {
         while (Enabled)
         {
-            EmoteLogItem emoteItem;
-            if (_emoteLog.TryDequeue(out emoteItem))
+            if (_emoteLog.TryDequeue(out var emoteItem))
             {
                 Service.PluginLog.Verbose($"{Guid}: Processing emote log item: {emoteItem.Instigator.Name} performed {emoteItem.EmoteId} on {emoteItem.Target?.Name ?? "[no target]"}");
                 if (!Configuration.EmoteIds.Contains(emoteItem.EmoteId)) continue;

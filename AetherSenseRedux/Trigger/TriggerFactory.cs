@@ -86,20 +86,11 @@ namespace AetherSenseRedux.Trigger
                         };
                     }
                 case "Emote":
-                    ushort[] emoteIds;
-                    Service.PluginLog.Debug($"Array is type {o.EmoteIds.GetType()}, check is {o is JObject} {o.EmoteIds.GetType() == typeof(Newtonsoft.Json.Linq.JArray)} {o.EmoteIds is JArray} {typeof(JArray).IsEquivalentTo(o.EmoteIds.GetType())} {typeof(JArray).Equals(o.EmoteIds.GetType())} {o.EmoteIds.GetType().IsEquivalentTo(typeof(JArray))} {o.EmoteIds.GetType().Equals(typeof(JArray))}, {nameof(JArray)}");
-                    var debug = (Type type) => Service.PluginLog.Debug($"{type.Assembly} {type.AssemblyQualifiedName} {type.Attributes} {type.BaseType} {type.GenericTypeArguments} {type.GUID} {type.IsArray} {type.MemberType} {type.MetadataToken} {type.Module} {type.ReflectedType} {type.TypeHandle}");
-
-                    debug(o.GetType());
-                    debug(o.EmoteIds.GetType());
-                    debug(typeof(JArray));
-
-                    emoteIds = o.EmoteIds.GetType() == typeof(ushort[]) ? (ushort[])o.EmoteIds : o.EmoteIds.ToObject<ushort[]>();
-
+                    // Service.PluginLog.Debug($"Array is type {o.EmoteIds.GetType()}, check is {o is JObject} {o.EmoteIds.GetType() == typeof(Newtonsoft.Json.Linq.JArray)} {o.EmoteIds is JArray} {typeof(JArray).IsEquivalentTo(o.EmoteIds.GetType())}, {nameof(JArray)}");
                     return new EmoteTriggerConfig()
                     {
                         Name = (string)o.Name,
-                        EmoteIds = emoteIds,
+                        EmoteIds = o.EmoteIds.GetType() == typeof(ushort[]) ? (ushort[])o.EmoteIds : o.EmoteIds.ToObject<ushort[]>(),
                         RetriggerDelay = (long)o.RetriggerDelay,
                         EnabledDevices = devices,
                         PatternSettings = PatternFactory.GetPatternConfigFromObject(o.PatternSettings),
