@@ -300,7 +300,7 @@ namespace AetherSenseRedux
                 EmoteId = e.EmoteId,
                 PlayerIsPerformer = isPerformer,
                 PlayerIsTarget = isTarget,
-                Timestamp = new DateTime(),
+                Timestamp = DateTime.Now,
             };
 
             foreach (var trigger in _emoteTriggerPool)
