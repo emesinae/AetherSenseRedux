@@ -514,12 +514,67 @@ namespace AetherSenseRedux
                     unsafe
                     {
                         ImGui.TableSetupScrollFreeze(0, 1);
-                        ImGui.TableSetupColumn("ID", ImGuiTableColumnFlags.DefaultSort);
-                        ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.None);
-                        ImGui.TableSetupColumn("Command", ImGuiTableColumnFlags.None);
+                        ImGui.TableSetupColumn("ID", ImGuiTableColumnFlags.DefaultSort, 0, 1);
+                        ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.None, 0, 2);
+                        ImGui.TableSetupColumn("Command", ImGuiTableColumnFlags.None, 0, 3);
                         ImGui.TableHeadersRow();
 
-                        var emotes = emoteSearchString.Trim() == "" ? EmoteDataUtil.GetEmotes() : EmoteDataUtil.GetEmotes().Where((Func<Emote, int, bool>)EmoteSearch).ToImmutableList();
+                        var emotes = emoteSearchString.Trim() == ""
+                            ? EmoteDataUtil.GetEmotes()
+                            : EmoteDataUtil.GetEmotes().Where((Func<Emote, int, bool>)EmoteSearch).ToImmutableList();
+
+                        if (ImGui.TableGetSortSpecs() is var sortSpecs)
+                        {
+                            emotes = emotes.Sort(EmoteComparison);
+
+                            int EmoteComparison(Emote a, Emote b)
+                            {
+                                for (var n = 0; n < sortSpecs.SpecsCount; n++)
+                                {
+                                    var sortSpec = sortSpecs.Specs.NativePtr[n];
+                                    int delta = 0;
+                                    switch (sortSpec.ColumnUserID)
+                                    {
+                                        case 1: delta = ((int)a.RowId - (int)b.RowId); break;
+                                        case 2:
+                                            {
+                                                if (a.Name.IsEmpty && b.Name.IsEmpty)
+                                                    delta = 0;
+                                                else if (a.Name.IsEmpty && !b.Name.IsEmpty)
+                                                    delta = 1;
+                                                else if (!a.Name.IsEmpty && b.Name.IsEmpty)
+                                                    delta = -1;
+                                                else
+                                                    delta = a.Name.ExtractText().CompareTo(b.Name.ExtractText());
+                                                break;
+                                            }
+                                        case 3:
+                                            {
+                                                if (a.TextCommand.ValueNullable == null &&
+                                                    b.TextCommand.ValueNullable == null)
+                                                    delta = 0;
+                                                else if (a.TextCommand.ValueNullable == null &&
+                                                         b.TextCommand.ValueNullable != null)
+                                                    delta = 1;
+                                                else if (a.TextCommand.ValueNullable != null &&
+                                                         b.TextCommand.ValueNullable == null)
+                                                    delta = -1;
+                                                else
+                                                    delta = a.TextCommand.Value.Command.ExtractText()
+                                                        .CompareTo(b.TextCommand.Value.Command.ExtractText());
+                                                break;
+                                            }
+                                    }
+
+                                    if (delta > 0)
+                                        return sortSpec.SortDirection == ImGuiSortDirection.Ascending ? 1 : -1;
+                                    else if (delta < 0)
+                                        return sortSpec.SortDirection == ImGuiSortDirection.Ascending ? -1 : 1;
+                                }
+
+                                return (int)a.RowId - (int)b.RowId;
+                            }
+                        }
 
                         var clipper = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
                         clipper.Begin(emotes.Count);
