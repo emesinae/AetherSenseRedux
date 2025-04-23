@@ -70,17 +70,18 @@ public class EmoteSelectionModal
             var outerSize = new Vector2(0, ImGui.GetTextLineHeightWithSpacing() * 10);
             if (ImGui.BeginTable("EmoteSelectionTable", 3, flags, outerSize))
             {
+
+                ImGui.TableSetupScrollFreeze(0, 1);
+                ImGui.TableSetupColumn("ID", ImGuiTableColumnFlags.None, 0, (uint)EmoteTableColumn.Id);
+                ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.DefaultSort, 0, (uint)EmoteTableColumn.Name);
+                ImGui.TableSetupColumn("Command", ImGuiTableColumnFlags.None, 0, (uint)EmoteTableColumn.Command);
+                ImGui.TableHeadersRow();
+
+                if (ImGui.TableGetSortSpecs() is var sortSpecs)
+                    ApplyEmoteTableSorting(sortSpecs);
+
                 unsafe
                 {
-                    ImGui.TableSetupScrollFreeze(0, 1);
-                    ImGui.TableSetupColumn("ID", ImGuiTableColumnFlags.None, 0, (uint)EmoteTableColumn.Id);
-                    ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.DefaultSort, 0, (uint)EmoteTableColumn.Name);
-                    ImGui.TableSetupColumn("Command", ImGuiTableColumnFlags.None, 0, (uint)EmoteTableColumn.Command);
-                    ImGui.TableHeadersRow();
-
-                    if (ImGui.TableGetSortSpecs() is var sortSpecs)
-                        ApplyEmoteTableSorting(sortSpecs);
-
                     var clipper = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
                     clipper.Begin(FilteredEmotes.Count);
                     while (clipper.Step())
@@ -117,10 +118,10 @@ public class EmoteSelectionModal
                                 ImGui.TextColored(ImGuiColors.DalamudGrey, "unknown");
                         }
                     }
-
                     clipper.Destroy();
-                    ImGui.EndTable();
                 }
+
+                ImGui.EndTable();
             }
 
             if (ImGui.Button("Cancel"))
