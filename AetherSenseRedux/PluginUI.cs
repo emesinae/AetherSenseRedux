@@ -3,8 +3,10 @@ using AetherSenseRedux.Trigger;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Numerics;
+using System.Text.RegularExpressions;
 using AetherSenseRedux.Trigger.Emote;
 using AetherSenseRedux.Util;
 using Dalamud.Interface.Colors;
@@ -28,6 +30,8 @@ namespace AetherSenseRedux
 
         private int _selectedTrigger = 0;
         private int _selectedFilterCategory = 0;
+
+        private string _emoteSearch = "";
 
         // In order to keep the UI from trampling all over the configuration as changes are being made, we keep a working copy here when needed.
         private Configuration? _workingCopy;
@@ -483,11 +487,30 @@ namespace AetherSenseRedux
 
         private bool DrawEmoteSelectionPopup(string popupTitle, Emote? selectedEmote, out uint emoteId)
         {
-            if (ImGui.BeginPopupModal("SelectEmotePopup"))
+            var pOpen = true;
+            if (ImGui.BeginPopupModal("SelectEmotePopup", ref pOpen))
             {
-                const ImGuiTableFlags flags = ImGuiTableFlags.ScrollY | ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.Sortable;
-                if (ImGui.BeginTable("EmoteSelectionTable", 3, flags))
+                var emoteSearchString = _emoteSearch;
+                if (ImGui.InputTextWithHint("Search", "Name, /command, or ID", ref emoteSearchString, 50))
                 {
+                    Service.PluginLog.Debug($"Received emote search string '{emoteSearchString}'");
+                    _emoteSearch = emoteSearchString;
+                }
+
+                const ImGuiTableFlags flags = ImGuiTableFlags.ScrollY | ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.Sortable;
+                var outerSize = new Vector2(0, ImGui.GetTextLineHeightWithSpacing() * 10);
+                if (ImGui.BeginTable("EmoteSelectionTable", 3, flags, outerSize))
+                {
+                    bool EmoteSearch(Emote e, int _) =>
+                        e.Name.ExtractText().Contains(emoteSearchString, StringComparison.OrdinalIgnoreCase) ||
+                        (e.TextCommand.ValueNullable?.Command.ExtractText()
+                            .Contains(emoteSearchString, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                        (e.TextCommand.ValueNullable?.ShortCommand.ExtractText()
+                            .Contains(emoteSearchString, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                        (e.TextCommand.ValueNullable?.ShortAlias.ExtractText()
+                            .Contains(emoteSearchString, StringComparison.OrdinalIgnoreCase) ?? false) || (e.RowId
+                            .ToString().Contains(emoteSearchString, StringComparison.OrdinalIgnoreCase));
+
                     unsafe
                     {
                         ImGui.TableSetupScrollFreeze(0, 1);
@@ -496,7 +519,7 @@ namespace AetherSenseRedux
                         ImGui.TableSetupColumn("Command", ImGuiTableColumnFlags.None);
                         ImGui.TableHeadersRow();
 
-                        var emotes = EmoteDataUtil.GetEmotes();
+                        var emotes = emoteSearchString.Trim() == "" ? EmoteDataUtil.GetEmotes() : EmoteDataUtil.GetEmotes().Where((Func<Emote, int, bool>)EmoteSearch).ToImmutableList();
 
                         var clipper = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
                         clipper.Begin(emotes.Count);
