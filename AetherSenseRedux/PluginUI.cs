@@ -459,6 +459,7 @@ namespace AetherSenseRedux
                 if (DrawEmoteSelectionPopup("SelectEmotePopup", selectedEmote, out var newEmoteId))
                 {
                     emoteId = newEmoteId;
+                    t.EmoteIds = [(ushort)emoteId];
                 }
                 //end emote ID field
 
