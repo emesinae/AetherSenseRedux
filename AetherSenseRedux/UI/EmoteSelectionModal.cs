@@ -14,7 +14,7 @@ public class EmoteSelectionModal
     /// <summary>
     /// The name of the modal in ImGui.
     /// </summary>
-    private string _name { get; init; }
+    private string Name { get; init; }
 
     /// <summary>
     /// The current value of search input.
@@ -45,25 +45,25 @@ public class EmoteSelectionModal
 
     public EmoteSelectionModal(string name)
     {
-        this._name = name;
+        this.Name = name;
         this._sortedEmotes = EmoteDataUtil.GetEmotes();
         this._filteredEmotes = this._sortedEmotes;
     }
 
     public void OpenModalPopup()
     {
-        ImGui.OpenPopup(_name);
+        ImGui.OpenPopup(Name);
     }
 
     public bool DrawEmoteSelectionPopup(string popupTitle, Emote? selectedEmote, out uint emoteId)
     {
         var pOpen = true;
-        if (ImGui.BeginPopupModal(_name, ref pOpen))
+        if (ImGui.BeginPopupModal(Name, ref pOpen))
         {
             var emoteSearchString = _emoteSearch;
             if (ImGui.InputTextWithHint("Search", "Name, /command, or ID", ref emoteSearchString, 50))
             {
-                setSearchString(emoteSearchString);
+                SetSearchString(emoteSearchString);
             }
 
             const ImGuiTableFlags flags = ImGuiTableFlags.ScrollY | ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.Sortable | ImGuiTableFlags.NoSavedSettings;
@@ -73,9 +73,9 @@ public class EmoteSelectionModal
                 unsafe
                 {
                     ImGui.TableSetupScrollFreeze(0, 1);
-                    ImGui.TableSetupColumn("ID", ImGuiTableColumnFlags.None, 0, 1);
-                    ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.DefaultSort, 0, 2);
-                    ImGui.TableSetupColumn("Command", ImGuiTableColumnFlags.None, 0, 3);
+                    ImGui.TableSetupColumn("ID", ImGuiTableColumnFlags.None, 0, (uint)EmoteTableColumn.Id);
+                    ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.DefaultSort, 0, (uint)EmoteTableColumn.Name);
+                    ImGui.TableSetupColumn("Command", ImGuiTableColumnFlags.None, 0, (uint)EmoteTableColumn.Command);
                     ImGui.TableHeadersRow();
 
                     if (ImGui.TableGetSortSpecs() is var sortSpecs)
@@ -139,7 +139,7 @@ public class EmoteSelectionModal
     /// Save the search string to local property, and refresh the filtered emote list.
     /// </summary>
     /// <param name="searchString">A string to search emotes for</param>
-    private void setSearchString(string searchString)
+    private void SetSearchString(string searchString)
     {
         _emoteSearch = searchString.Trim();
     }
@@ -174,7 +174,7 @@ public class EmoteSelectionModal
     private void ClosePopup()
     {
         ImGui.CloseCurrentPopup();
-        setSearchString("");
+        SetSearchString("");
     }
 
     private static bool DoesSearchStringMatchEmote(string searchString, Emote e)
@@ -210,11 +210,11 @@ public class EmoteSelectionModal
             {
                 var sortSpec = sortSpecs.Specs.NativePtr[n];
 
-                int delta = 0;
+                var delta = 0;
                 switch (sortSpec.ColumnUserID)
                 {
-                    case 1: delta = ((int)a.RowId - (int)b.RowId); break;
-                    case 2:
+                    case (uint)EmoteTableColumn.Id: delta = ((int)a.RowId - (int)b.RowId); break;
+                    case (uint)EmoteTableColumn.Name:
                         {
                             if (a.Name.IsEmpty && b.Name.IsEmpty)
                                 delta = 0;
@@ -223,10 +223,11 @@ public class EmoteSelectionModal
                             else if (!a.Name.IsEmpty && b.Name.IsEmpty)
                                 delta = -1;
                             else
-                                delta = a.Name.ExtractText().CompareTo(b.Name.ExtractText());
+                                delta = string.Compare(a.Name.ExtractText(), b.Name.ExtractText(),
+                                    StringComparison.OrdinalIgnoreCase);
                             break;
                         }
-                    case 3:
+                    case (uint)EmoteTableColumn.Command:
                         {
                             if (a.TextCommand.ValueNullable == null &&
                                 b.TextCommand.ValueNullable == null)
@@ -238,8 +239,8 @@ public class EmoteSelectionModal
                                      b.TextCommand.ValueNullable == null)
                                 delta = -1;
                             else
-                                delta = a.TextCommand.Value.Command.ExtractText()
-                                    .CompareTo(b.TextCommand.Value.Command.ExtractText());
+                                delta = string.Compare(a.TextCommand.Value.Command.ExtractText(),
+                                    b.TextCommand.Value.Command.ExtractText(), StringComparison.OrdinalIgnoreCase);
                             break;
                         }
                 }
@@ -253,4 +254,11 @@ public class EmoteSelectionModal
 
         return (int)a.RowId - (int)b.RowId;
     }
+}
+
+internal enum EmoteTableColumn : uint
+{
+    Id = 1,
+    Name = 2,
+    Command = 3
 }
