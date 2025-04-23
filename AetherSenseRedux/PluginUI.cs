@@ -592,6 +592,7 @@ namespace AetherSenseRedux
                                 {
                                     emoteId = availableEmote.RowId;
                                     ImGui.CloseCurrentPopup();
+                                    _emoteSearch = "";
                                     return true;
                                 }
 
@@ -619,7 +620,10 @@ namespace AetherSenseRedux
                 }
 
                 if (ImGui.Button("Cancel"))
+                {
                     ImGui.CloseCurrentPopup();
+                    _emoteSearch = "";
+                }
 
                 ImGui.EndPopup();
             }
