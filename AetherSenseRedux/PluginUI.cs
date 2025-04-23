@@ -497,7 +497,7 @@ namespace AetherSenseRedux
                     _emoteSearch = emoteSearchString;
                 }
 
-                const ImGuiTableFlags flags = ImGuiTableFlags.ScrollY | ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.Sortable;
+                const ImGuiTableFlags flags = ImGuiTableFlags.ScrollY | ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.Sortable | ImGuiTableFlags.NoSavedSettings;
                 var outerSize = new Vector2(0, ImGui.GetTextLineHeightWithSpacing() * 10);
                 if (ImGui.BeginTable("EmoteSelectionTable", 3, flags, outerSize))
                 {
@@ -514,8 +514,8 @@ namespace AetherSenseRedux
                     unsafe
                     {
                         ImGui.TableSetupScrollFreeze(0, 1);
-                        ImGui.TableSetupColumn("ID", ImGuiTableColumnFlags.DefaultSort, 0, 1);
-                        ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.None, 0, 2);
+                        ImGui.TableSetupColumn("ID", ImGuiTableColumnFlags.None, 0, 1);
+                        ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.DefaultSort, 0, 2);
                         ImGui.TableSetupColumn("Command", ImGuiTableColumnFlags.None, 0, 3);
                         ImGui.TableHeadersRow();
 
