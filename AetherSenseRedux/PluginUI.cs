@@ -3,14 +3,11 @@ using AetherSenseRedux.Trigger;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Numerics;
-using System.Text.RegularExpressions;
 using AetherSenseRedux.Trigger.Emote;
+using AetherSenseRedux.UI;
 using AetherSenseRedux.Util;
-using Dalamud.Interface.Colors;
-using Lumina.Excel.Sheets;
 using XIVChatTypes;
 
 namespace AetherSenseRedux
@@ -31,7 +28,7 @@ namespace AetherSenseRedux
         private int _selectedTrigger = 0;
         private int _selectedFilterCategory = 0;
 
-        private string _emoteSearch = "";
+        private readonly EmoteSelectionModal _emoteSelectionModal;
 
         // In order to keep the UI from trampling all over the configuration as changes are being made, we keep a working copy here when needed.
         private Configuration? _workingCopy;
@@ -39,6 +36,7 @@ namespace AetherSenseRedux
         public PluginUI(Configuration configuration)
         {
             this._configuration = configuration;
+            this._emoteSelectionModal = new EmoteSelectionModal("SelectEmotePopup");
         }
 
         /// <summary>
@@ -452,11 +450,11 @@ namespace AetherSenseRedux
                 uint emoteId = t.EmoteIds.FirstOrDefault();
                 var selectedEmote = EmoteDataUtil.GetEmote(emoteId);
                 if (ImGui.Button("Select emote..."))
-                    ImGui.OpenPopup("SelectEmotePopup");
+                    _emoteSelectionModal.OpenModalPopup();
                 ImGui.SameLine();
                 ImGui.TextUnformatted(selectedEmote?.Name.ExtractText() ?? selectedEmote?.TextCommand.ValueNullable?.Command.ExtractText() ?? (emoteId > 0 ? $"ID {emoteId}" : null) ?? "None selected");
 
-                if (DrawEmoteSelectionPopup("SelectEmotePopup", selectedEmote, out var newEmoteId))
+                if (_emoteSelectionModal.DrawEmoteSelectionPopup("SelectEmotePopup", selectedEmote, out var newEmoteId))
                 {
                     emoteId = newEmoteId;
                     t.EmoteIds = [(ushort)emoteId];
@@ -484,153 +482,6 @@ namespace AetherSenseRedux
 
                 ImGui.EndTabItem();
             }
-        }
-
-        private bool DrawEmoteSelectionPopup(string popupTitle, Emote? selectedEmote, out uint emoteId)
-        {
-            var pOpen = true;
-            if (ImGui.BeginPopupModal("SelectEmotePopup", ref pOpen))
-            {
-                var emoteSearchString = _emoteSearch;
-                if (ImGui.InputTextWithHint("Search", "Name, /command, or ID", ref emoteSearchString, 50))
-                {
-                    Service.PluginLog.Debug($"Received emote search string '{emoteSearchString}'");
-                    _emoteSearch = emoteSearchString;
-                }
-
-                const ImGuiTableFlags flags = ImGuiTableFlags.ScrollY | ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.Sortable | ImGuiTableFlags.NoSavedSettings;
-                var outerSize = new Vector2(0, ImGui.GetTextLineHeightWithSpacing() * 10);
-                if (ImGui.BeginTable("EmoteSelectionTable", 3, flags, outerSize))
-                {
-                    bool EmoteSearch(Emote e, int _) =>
-                        e.Name.ExtractText().Contains(emoteSearchString, StringComparison.OrdinalIgnoreCase) ||
-                        (e.TextCommand.ValueNullable?.Command.ExtractText()
-                            .Contains(emoteSearchString, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                        (e.TextCommand.ValueNullable?.ShortCommand.ExtractText()
-                            .Contains(emoteSearchString, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                        (e.TextCommand.ValueNullable?.ShortAlias.ExtractText()
-                            .Contains(emoteSearchString, StringComparison.OrdinalIgnoreCase) ?? false) || (e.RowId
-                            .ToString().Contains(emoteSearchString, StringComparison.OrdinalIgnoreCase));
-
-                    unsafe
-                    {
-                        ImGui.TableSetupScrollFreeze(0, 1);
-                        ImGui.TableSetupColumn("ID", ImGuiTableColumnFlags.None, 0, 1);
-                        ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.DefaultSort, 0, 2);
-                        ImGui.TableSetupColumn("Command", ImGuiTableColumnFlags.None, 0, 3);
-                        ImGui.TableHeadersRow();
-
-                        var emotes = emoteSearchString.Trim() == ""
-                            ? EmoteDataUtil.GetEmotes()
-                            : EmoteDataUtil.GetEmotes().Where((Func<Emote, int, bool>)EmoteSearch).ToImmutableList();
-
-                        if (ImGui.TableGetSortSpecs() is var sortSpecs)
-                        {
-                            emotes = emotes.Sort(EmoteComparison);
-
-                            int EmoteComparison(Emote a, Emote b)
-                            {
-                                for (var n = 0; n < sortSpecs.SpecsCount; n++)
-                                {
-                                    var sortSpec = sortSpecs.Specs.NativePtr[n];
-                                    int delta = 0;
-                                    switch (sortSpec.ColumnUserID)
-                                    {
-                                        case 1: delta = ((int)a.RowId - (int)b.RowId); break;
-                                        case 2:
-                                            {
-                                                if (a.Name.IsEmpty && b.Name.IsEmpty)
-                                                    delta = 0;
-                                                else if (a.Name.IsEmpty && !b.Name.IsEmpty)
-                                                    delta = 1;
-                                                else if (!a.Name.IsEmpty && b.Name.IsEmpty)
-                                                    delta = -1;
-                                                else
-                                                    delta = a.Name.ExtractText().CompareTo(b.Name.ExtractText());
-                                                break;
-                                            }
-                                        case 3:
-                                            {
-                                                if (a.TextCommand.ValueNullable == null &&
-                                                    b.TextCommand.ValueNullable == null)
-                                                    delta = 0;
-                                                else if (a.TextCommand.ValueNullable == null &&
-                                                         b.TextCommand.ValueNullable != null)
-                                                    delta = 1;
-                                                else if (a.TextCommand.ValueNullable != null &&
-                                                         b.TextCommand.ValueNullable == null)
-                                                    delta = -1;
-                                                else
-                                                    delta = a.TextCommand.Value.Command.ExtractText()
-                                                        .CompareTo(b.TextCommand.Value.Command.ExtractText());
-                                                break;
-                                            }
-                                    }
-
-                                    if (delta > 0)
-                                        return sortSpec.SortDirection == ImGuiSortDirection.Ascending ? 1 : -1;
-                                    else if (delta < 0)
-                                        return sortSpec.SortDirection == ImGuiSortDirection.Ascending ? -1 : 1;
-                                }
-
-                                return (int)a.RowId - (int)b.RowId;
-                            }
-                        }
-
-                        var clipper = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
-                        clipper.Begin(emotes.Count);
-                        while (clipper.Step())
-                        {
-                            for (var row = clipper.DisplayStart; row < clipper.DisplayEnd; row++)
-                            {
-                                var availableEmote = emotes[row];
-                                var isSelected = availableEmote.RowId == selectedEmote?.RowId;
-                                ImGui.TableNextRow();
-
-                                ImGui.TableSetColumnIndex(0);
-                                if (ImGui.Selectable($"{availableEmote.RowId}", isSelected,
-                                        ImGuiSelectableFlags.SpanAllColumns))
-                                {
-                                    emoteId = availableEmote.RowId;
-                                    ImGui.CloseCurrentPopup();
-                                    _emoteSearch = "";
-                                    return true;
-                                }
-
-                                if (isSelected)
-                                    ImGui.SetItemDefaultFocus();
-
-                                ImGui.TableSetColumnIndex(1);
-                                if (!availableEmote.Name.IsEmpty)
-                                    ImGui.Text($"{availableEmote.Name.ExtractText()}");
-                                else
-                                    ImGui.TextColored(ImGuiColors.DalamudGrey, "unknown");
-
-                                ImGui.TableSetColumnIndex(2);
-                                var command = availableEmote.TextCommand.ValueNullable?.Command;
-                                if (command is { IsEmpty: false })
-                                    ImGui.Text($"{command.Value.ExtractText()}");
-                                else
-                                    ImGui.TextColored(ImGuiColors.DalamudGrey, "unknown");
-                            }
-                        }
-
-                        clipper.Destroy();
-                        ImGui.EndTable();
-                    }
-                }
-
-                if (ImGui.Button("Cancel"))
-                {
-                    ImGui.CloseCurrentPopup();
-                    _emoteSearch = "";
-                }
-
-                ImGui.EndPopup();
-            }
-
-            emoteId = selectedEmote?.RowId ?? 0;
-            return false;
         }
 
         /// <summary>
