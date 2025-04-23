@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using AetherSenseRedux.Trigger.Emote;
+using AetherSenseRedux.Util;
 using Dalamud.Interface.Colors;
 using XIVChatTypes;
 
@@ -442,22 +443,82 @@ namespace AetherSenseRedux
                 }
                 //end name field
 
-                //begin emote ID field
-                int emoteId = t.EmoteIds.FirstOrDefault();
-                if (ImGui.InputInt("Emote ID", ref emoteId))
+                try
                 {
-                    if (emoteId < 0 || emoteId >= ushort.MaxValue)
+                    //begin emote ID field
+                    uint emoteId = t.EmoteIds.FirstOrDefault();
+                    var selectedEmote = EmoteDataUtil.GetEmote(emoteId);
+                    if (ImGui.Button("Select emote..."))
+                        ImGui.OpenPopup("SelectEmotePopup");
+                    ImGui.SameLine();
+                    ImGui.TextUnformatted(selectedEmote?.Name.ExtractText() ?? selectedEmote?.TextCommand.ValueNullable?.Command.ExtractText() ?? (emoteId > 0 ? $"ID {emoteId}" : null) ?? "None selected");
+
+
+                    if (ImGui.BeginPopupModal("SelectEmotePopup"))
                     {
-                        ImGui.TextColored(ImGuiColors.DalamudRed, $"Emote ID must be between 1 and {ushort.MaxValue}");
-                    }
-                    else if (emoteId > 0)
-                    {
-                        if (emoteId != (ushort)emoteId)
+                        const ImGuiTableFlags flags = ImGuiTableFlags.ScrollY | ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.Sortable;
+                        if (ImGui.BeginTable("EmoteSelectionTable", 3, flags))
                         {
-                            Service.PluginLog.Error($"Cast of int value {emoteId} to ushort produced value {(ushort)emoteId}, but both values should be equal.");
+                            unsafe
+                            {
+                                ImGui.TableSetupScrollFreeze(0, 1);
+                                ImGui.TableSetupColumn("ID", ImGuiTableColumnFlags.DefaultSort);
+                                ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.None);
+                                ImGui.TableSetupColumn("Command", ImGuiTableColumnFlags.None);
+                                ImGui.TableHeadersRow();
+
+                                var emotes = EmoteDataUtil.GetEmotes();
+
+                                var clipper = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
+                                clipper.Begin(emotes.Count);
+                                while (clipper.Step())
+                                {
+                                    for (var row = clipper.DisplayStart; row < clipper.DisplayEnd; row++)
+                                    {
+                                        var availableEmote = emotes[row];
+                                        var isSelected = availableEmote.RowId == emoteId;
+                                        ImGui.TableNextRow();
+
+                                        ImGui.TableSetColumnIndex(0);
+                                        if (ImGui.Selectable($"{availableEmote.RowId}", isSelected,
+                                                ImGuiSelectableFlags.SpanAllColumns))
+                                        {
+                                            t.EmoteIds = [(ushort)availableEmote.RowId];
+                                            ImGui.CloseCurrentPopup();
+                                        }
+
+                                        if (isSelected)
+                                            ImGui.SetItemDefaultFocus();
+
+                                        ImGui.TableSetColumnIndex(1);
+                                        if (!availableEmote.Name.IsEmpty)
+                                            ImGui.Text($"{availableEmote.Name.ExtractText()}");
+                                        else
+                                            ImGui.TextColored(ImGuiColors.DalamudGrey, "unknown");
+
+                                        ImGui.TableSetColumnIndex(2);
+                                        var command = availableEmote.TextCommand.ValueNullable?.Command;
+                                        if (command is { IsEmpty: false })
+                                            ImGui.Text($"{command.Value.ExtractText()}");
+                                        else
+                                            ImGui.TextColored(ImGuiColors.DalamudGrey, "unknown");
+                                    }
+                                }
+
+                                clipper.Destroy();
+                                ImGui.EndTable();
+                            }
                         }
-                        t.EmoteIds = [(ushort)emoteId];
+
+                        if (ImGui.Button("Cancel"))
+                            ImGui.CloseCurrentPopup();
+
+                        ImGui.EndPopup();
                     }
+                }
+                catch (Exception e)
+                {
+                    Service.PluginLog.Error(e, $"UI failure: {e.Message}");
                 }
                 //end emote ID field
 

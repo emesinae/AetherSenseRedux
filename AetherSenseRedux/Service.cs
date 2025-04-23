@@ -29,4 +29,7 @@ internal class Service
 
     [PluginService]
     internal static IClientState ClientState { get; set; } = null!;
+
+    [PluginService]
+    internal static IDataManager DataManager { get; set; } = null!;
 }
