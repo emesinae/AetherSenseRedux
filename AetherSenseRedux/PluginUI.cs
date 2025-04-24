@@ -472,7 +472,6 @@ namespace AetherSenseRedux
                                 // You have no idea how much I want to somehow create an alias named `SmolButton`.
                                 if (ImGui.SmallButton(FontAwesomeIcon.TrashAlt.ToIconString()))
                                 {
-                                    Service.PluginLog.Debug($"Button to remove emote {emoteId} pressed.");
                                     toRemove.Add(emoteId);
                                 }
                             }
@@ -481,7 +480,6 @@ namespace AetherSenseRedux
 
                     foreach (var emoteId in toRemove)
                     {
-                        Service.PluginLog.Debug($"Removing ${emoteId}");
                         t.EmoteIds.Remove(emoteId);
                     }
                 }
