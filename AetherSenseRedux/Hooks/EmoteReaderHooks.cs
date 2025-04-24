@@ -1,5 +1,5 @@
-// The original implementation of this class was originally
-// from the _Pat Me_ and _Emote Log_ plugins.
+// The original implementation of this class
+// was from the _Pat Me_ and _Emote Log_ plugins.
 //
 // It has been modified here to be more generic, and support
 // notifications of both incoming and outgoing emotes.
@@ -102,15 +102,15 @@ public class EmoteEvent
     /// <summary>
     ///     The character which performed the emote.
     /// </summary>
-    public required IPlayerCharacter Instigator { get; set; }
+    public required IPlayerCharacter Instigator { get; init; }
 
     /// <summary>
     ///     The character who was the target of the emote.
     /// </summary>
-    public IPlayerCharacter? Target { get; set; }
+    public IPlayerCharacter? Target { get; init; }
 
     /// <summary>
     ///     The emote ID.
     /// </summary>
-    public ushort EmoteId { get; set; }
+    public ushort EmoteId { get; init; }
 }
