@@ -8,6 +8,9 @@ using System.Numerics;
 using AetherSenseRedux.Trigger.Emote;
 using AetherSenseRedux.UI;
 using AetherSenseRedux.Util;
+using Dalamud.Interface;
+using Dalamud.Interface.Colors;
+using Dalamud.Interface.Utility.Raii;
 using XIVChatTypes;
 
 namespace AetherSenseRedux
@@ -446,20 +449,57 @@ namespace AetherSenseRedux
                 }
                 //end name field
 
-                //begin emote ID field
-                uint emoteId = t.EmoteIds.FirstOrDefault();
-                var selectedEmote = EmoteDataUtil.GetEmote(emoteId);
-                if (ImGui.Button("Select emote..."))
-                    _emoteSelectionModal.OpenModalPopup();
-                ImGui.SameLine();
-                ImGui.TextUnformatted(selectedEmote?.Name.ExtractText() ?? selectedEmote?.TextCommand.ValueNullable?.Command.ExtractText() ?? (emoteId > 0 ? $"ID {emoteId}" : null) ?? "None selected");
+                ImGui.Separator();
 
-                if (_emoteSelectionModal.DrawEmoteSelectionPopup("SelectEmotePopup", selectedEmote, out var newEmoteId))
+                ImGui.Text("Trigger Emotes:");
+                if (t.EmoteIds.Count == 0)
                 {
-                    emoteId = newEmoteId;
-                    t.EmoteIds = [(ushort)emoteId];
+                    ImGui.TextColored(ImGuiColors.DalamudGrey, "None selected");
+                }
+                else
+                {
+                    List<ushort> toRemove = [];
+                    foreach (var emoteId in t.EmoteIds)
+                    {
+                        var selectedEmote = EmoteDataUtil.GetEmote(emoteId);
+                        ImGui.Bullet();
+                        ImGui.TextUnformatted(selectedEmote?.Name.ExtractText() ?? selectedEmote?.TextCommand.ValueNullable?.Command.ExtractText() ?? (emoteId > 0 ? $"ID {emoteId}" : null) ?? "Missing data");
+                        ImGui.SameLine();
+                        using (ImRaii.PushFont(UiBuilder.IconFont))
+                        {
+                            using (ImRaii.PushId(emoteId))
+                            {
+                                // You have no idea how much I want to somehow create an alias named `SmolButton`.
+                                if (ImGui.SmallButton(FontAwesomeIcon.TrashAlt.ToIconString()))
+                                {
+                                    Service.PluginLog.Debug($"Button to remove emote {emoteId} pressed.");
+                                    toRemove.Add(emoteId);
+                                }
+                            }
+                        }
+                    }
+
+                    foreach (var emoteId in toRemove)
+                    {
+                        Service.PluginLog.Debug($"Removing ${emoteId}");
+                        t.EmoteIds.Remove(emoteId);
+                    }
+                }
+
+                //begin emote ID field
+                if (ImGui.Button("Add Emote"))
+                    _emoteSelectionModal.OpenModalPopup();
+
+                if (_emoteSelectionModal.DrawEmoteSelectionPopup("SelectEmotePopup", null, out var newEmoteId))
+                {
+                    if (!t.EmoteIds.Contains((ushort)newEmoteId))
+                    {
+                        t.EmoteIds.Add((ushort)newEmoteId);
+                    }
                 }
                 //end emote ID field
+
+                ImGui.Separator();
 
                 //begin retrigger delay field
                 var retriggerDelay = (int)t.RetriggerDelay;
