@@ -165,15 +165,11 @@ namespace AetherSenseRedux
             PluginInterface.UiBuilder.Draw += DrawUI;
             PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
 
-            Service.PluginLog.Info("Adding emote hook");
             this._emoteReaderHooks = new EmoteReaderHooks();
             this._emoteReaderHooks.OnEmote += OnEmoteReceived;
 
-            Service.PluginLog.Info($"Benchmark task before: {t.Id} {t.Status} {t.Exception?.Message}");
             t.Wait();
-            Service.PluginLog.Info($"Benchmark task after: {t.Id} {t.Status} {t.Exception?.Message}");
             WaitType = t.Result;
-            Service.PluginLog.Info("Plugin init complete");
         }
 
         /// <summary>
