@@ -497,6 +497,52 @@ namespace AetherSenseRedux
                 }
                 //end emote ID field
 
+                ImGui.NewLine();
+
+                ImGui.TextUnformatted("Activate this trigger when you are the:");
+                var triggerOnPerform = t.TriggerOnPerform;
+                if (ImGui.Checkbox("Performer", ref triggerOnPerform))
+                {
+                    t.TriggerOnPerform = triggerOnPerform;
+                }
+
+                ImGui.SameLine();
+                ImGui.TextDisabled("(?)");
+                if (ImGui.IsItemHovered())
+                {
+                    using (ImRaii.Tooltip())
+                    {
+                        ImGui.Text("Trigger when YOU perform the emote.");
+                        ImGui.TextDisabled("Ex: you /dote on someone.");
+                    }
+                }
+
+                var triggerOnTarget = t.TriggerOnTarget;
+                if (ImGui.Checkbox("Target", ref triggerOnTarget))
+                {
+                    t.TriggerOnTarget = triggerOnTarget;
+                }
+
+                ImGui.SameLine();
+                ImGui.TextDisabled("(?)");
+                if (ImGui.IsItemHovered())
+                {
+                    using (ImRaii.Tooltip())
+                    {
+                        ImGui.TextUnformatted("Trigger when you are the target");
+                        ImGui.TextUnformatted("of someone performing the emote.");
+                        ImGui.TextDisabled("Ex: someone /dotes on you.");
+                    }
+                }
+
+                if (!t.TriggerOnPerform && !t.TriggerOnTarget)
+                {
+                    using (ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudRed))
+                    {
+                        ImGui.TextWrapped("This trigger will never activate if neither of the options are selected!");
+                    }
+                }
+
                 ImGui.Separator();
 
                 //begin retrigger delay field
@@ -506,17 +552,6 @@ namespace AetherSenseRedux
                     t.RetriggerDelay = retriggerDelay;
                 }
                 //end retrigger delay field
-
-                var triggerOnPerform = t.TriggerOnPerform;
-                if (ImGui.Checkbox("Trigger when Performer", ref triggerOnPerform))
-                {
-                    t.TriggerOnPerform = triggerOnPerform;
-                }
-                var triggerOnTarget = t.TriggerOnTarget;
-                if (ImGui.Checkbox("Trigger when Target", ref triggerOnTarget))
-                {
-                    t.TriggerOnTarget = triggerOnTarget;
-                }
 
                 ImGui.EndTabItem();
             }
