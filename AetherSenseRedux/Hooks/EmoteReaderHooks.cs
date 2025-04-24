@@ -51,10 +51,6 @@ public class EmoteReaderHooks : IDisposable
 
     private void OnEmoteDetour(ulong unk, ulong instigatorAddr, ushort emoteId, ulong targetId, ulong unk2)
     {
-        // unk - some field of event framework singleton? doesn't matter here anyway
-        Service.PluginLog.Verbose(
-            $"Emote >> unk:{unk:X}, instigatorAddr:{instigatorAddr:X}, emoteId:{emoteId}, targetId:{targetId:X}, unk2:{unk2:X}, player:{Service.ClientState.LocalPlayer?.GameObjectId:X}");
-
         if (Service.ClientState.LocalPlayer != null)
         {
             var instigatorOb = Service.ObjectTable.FirstOrDefault(x => (ulong)x.Address == instigatorAddr);
@@ -63,7 +59,7 @@ public class EmoteReaderHooks : IDisposable
                 // If a remote player performed the emote while targeting the local player
                 if (targetId == Service.ClientState.LocalPlayer.GameObjectId)
                 {
-                    Service.PluginLog.Debug(
+                    Service.PluginLog.Verbose(
                         $"Player {instigatorOb.Name} used emote {emoteId} on target {Service.ClientState.LocalPlayer.Name} ({targetId:X})");
                     OnEmote?.Invoke(new EmoteEvent
                     {
@@ -79,7 +75,7 @@ public class EmoteReaderHooks : IDisposable
                         ? Service.ObjectTable.FirstOrDefault(x => x.GameObjectId == targetId)
                         : null;
 
-                    Service.PluginLog.Debug(
+                    Service.PluginLog.Verbose(
                         $"Local player {instigatorOb.Name} used emote {emoteId}" + (targetOb != null
                             ? $" on target {targetOb.Name} ({targetId:X})"
                             : string.Empty));
