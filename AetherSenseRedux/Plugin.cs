@@ -16,6 +16,7 @@ using System.Linq;
 using System.Threading;
 using AetherSenseRedux.Hooks;
 using AetherSenseRedux.Trigger.Emote;
+using Lumina.Excel.Sheets;
 
 namespace AetherSenseRedux
 {
@@ -291,7 +292,10 @@ namespace AetherSenseRedux
         {
             var isPerformer = e.Instigator.GameObjectId == Service.ClientState.LocalPlayer?.GameObjectId;
             var isTarget = e.Target?.GameObjectId == Service.ClientState.LocalPlayer?.GameObjectId;
-            Service.PluginLog.Debug($"{e.Instigator.Name} performed emote {e.EmoteId}" + (e.Target != null ? $" on target {e.Target.Name}" : string.Empty));
+
+            var emote = Service.DataManager.GetExcelSheet<Emote>().GetRowOrDefault(e.EmoteId);
+
+            Service.PluginLog.Debug($"{e.Instigator.Name} performed emote {emote?.Name.ExtractText() ?? "UNKNOWN"} ({e.EmoteId})" + (e.Target != null ? $" on target {e.Target.Name}" : string.Empty));
 
             var emoteLogItem = new EmoteLogItem
             {
