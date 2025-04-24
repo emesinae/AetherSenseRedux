@@ -20,33 +20,30 @@ public class EmoteReaderHooks : IDisposable
 {
     public delegate void EmoteDelegate(EmoteEvent e);
 
-    private readonly Hook<OnEmoteFuncDelegate> hookEmote;
+    /// <summary>
+    /// Event triggered when the player either performs an emote
+    /// or is the target of someone else performing an emote.
+    /// </summary>
+    public event EmoteDelegate? OnEmote;
+
+    private readonly Hook<OnEmoteFuncDelegate> _hookEmote;
 
     public EmoteReaderHooks()
     {
-        Service.PluginLog.Verbose("Before hook setup");
-        hookEmote = Service.GameInteropProvider.HookFromSignature<OnEmoteFuncDelegate>(
+        _hookEmote = Service.GameInteropProvider.HookFromSignature<OnEmoteFuncDelegate>(
             "E8 ?? ?? ?? ?? 48 8D 8B ?? ?? ?? ?? 4C 89 74 24", OnEmoteDetour);
-        Service.PluginLog.Verbose("Before hook enable");
-        hookEmote.Enable();
-        Service.PluginLog.Verbose("Hook enabled");
+        _hookEmote.Enable();
     }
 
     public void Dispose()
     {
-        Service.PluginLog.Verbose("Emote reader dispose started");
-        hookEmote.Dispose();
+        _hookEmote.Dispose();
         GC.SuppressFinalize(this);
-        Service.PluginLog.Verbose("Emote reader dispose complete");
     }
-
-    public event EmoteDelegate? OnEmote;
 
     ~EmoteReaderHooks()
     {
-        Service.PluginLog.Verbose("Emote reader destructor started");
-        hookEmote.Dispose();
-        Service.PluginLog.Verbose("Emote reader destructor complete");
+        _hookEmote.Dispose();
     }
 
     private void OnEmoteDetour(ulong unk, ulong instigatorAddr, ushort emoteId, ulong targetId, ulong unk2)
@@ -90,11 +87,13 @@ public class EmoteReaderHooks : IDisposable
             }
         }
 
-        hookEmote.Original(unk, instigatorAddr, emoteId, targetId, unk2);
+        _hookEmote.Original(unk, instigatorAddr, emoteId, targetId, unk2);
     }
 
-    private delegate void OnEmoteFuncDelegate(ulong unk, ulong instigatorAddr, ushort emoteId, ulong targetId,
-        ulong unk2);
+    /// <summary>
+    /// Delegate signature for the function being hooked in the game.
+    /// </summary>
+    private delegate void OnEmoteFuncDelegate(ulong unk, ulong instigatorAddr, ushort emoteId, ulong targetId, ulong unk2);
 }
 
 public class EmoteEvent
