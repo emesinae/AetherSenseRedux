@@ -512,7 +512,7 @@ namespace AetherSenseRedux
                 {
                     using (ImRaii.Tooltip())
                     {
-                        ImGui.Text("Trigger when YOU perform the emote.");
+                        ImGui.Text("Trigger when you perform the emote.");
                         ImGui.TextDisabled("Ex: you /dote on someone.");
                     }
                 }
