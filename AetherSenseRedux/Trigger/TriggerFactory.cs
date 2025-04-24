@@ -86,11 +86,10 @@ namespace AetherSenseRedux.Trigger
                         };
                     }
                 case "Emote":
-                    // Service.PluginLog.Debug($"Array is type {o.EmoteIds.GetType()}, check is {o is JObject} {o.EmoteIds.GetType() == typeof(Newtonsoft.Json.Linq.JArray)} {o.EmoteIds is JArray} {typeof(JArray).IsEquivalentTo(o.EmoteIds.GetType())}, {nameof(JArray)}");
                     return new EmoteTriggerConfig()
                     {
                         Name = (string)o.Name,
-                        EmoteIds = o.EmoteIds.GetType() == typeof(ushort[]) ? (ushort[])o.EmoteIds : o.EmoteIds.ToObject<ushort[]>(),
+                        EmoteIds = o.EmoteIds is List<ushort> ? (List<ushort>)o.EmoteIds : ((ushort[])(o.EmoteIds.ToObject<ushort[]>())).ToList(),
                         RetriggerDelay = (long)o.RetriggerDelay,
                         EnabledDevices = devices,
                         PatternSettings = PatternFactory.GetPatternConfigFromObject(o.PatternSettings),
