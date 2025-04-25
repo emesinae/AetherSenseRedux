@@ -1,4 +1,21 @@
 # Change Log
+<a name="1.1.0"></a>
+## [1.1.0](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.1.0) (2025-04-25)
+
+### 🌱 Features
+
+* **trigger:** Add "Emote" triggers ([#9](https://www.github.com/emesinae/AetherSenseRedux/issues/9)) ([789a31e](https://www.github.com/emesinae/AetherSenseRedux/commit/789a31e539fe2969428739349f05fd7f0ae3d1e1))
+
+### Other
+
+* bump dotnet action to v4 and enable cache ([9dd33a2](https://www.github.com/emesinae/AetherSenseRedux/commit/9dd33a258c255bfb7079cf57095eed47b84fa026))
+* centralize service resources and apply suggested refactors ([#7](https://www.github.com/emesinae/AetherSenseRedux/issues/7)) ([0f2a110](https://www.github.com/emesinae/AetherSenseRedux/commit/0f2a110bc1bfba9f3b6bed5d66cb476473b9f039))
+* fix missing `v` in download link ([8d6f17f](https://www.github.com/emesinae/AetherSenseRedux/commit/8d6f17ff885ffcfb040f6edb487ffdc672426eff))
+* fix pre-commit styling ([5017008](https://www.github.com/emesinae/AetherSenseRedux/commit/5017008d23eab2d281fea4e8a1479e629db01e7c))
+* permit default merge and revert commits ([81da3e2](https://www.github.com/emesinae/AetherSenseRedux/commit/81da3e2fc96f5b85b76d8b997eaeacdb583dc786))
+* **deps:** update `Buttplug.io` version to 4.0.0 ([#8](https://www.github.com/emesinae/AetherSenseRedux/issues/8)) ([1853065](https://www.github.com/emesinae/AetherSenseRedux/commit/1853065e397ced2afe38507d4eb734fa9189c3f0))
+* **release:** 1.0.0 ([d572c73](https://www.github.com/emesinae/AetherSenseRedux/commit/d572c736dd82adfe182c3c4c76ac572f0443c45c))
+
 <a name="1.0.0"></a>
 ## [1.0.0](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.0.0) (2025-04-18)
 
