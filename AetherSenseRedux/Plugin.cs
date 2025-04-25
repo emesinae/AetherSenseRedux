@@ -559,6 +559,7 @@ namespace AetherSenseRedux
         /// </summary>
         public void Start()
         {
+            CleanTriggers();
             InitTriggers();
             Task.Run(InitButtplug);
         }
