@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AetherSenseRedux.Pattern;
-using XIVChatTypes;
+using AetherSenseRedux.Toy;
 
 namespace AetherSenseRedux.Trigger.Emote;
 

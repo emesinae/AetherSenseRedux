@@ -1,4 +1,4 @@
-namespace AetherSenseRedux;
+namespace AetherSenseRedux.Toy;
 
 /// <summary>
 /// Publicly exposed information about a Device's current status.

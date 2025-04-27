@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.Collections.Concurrent;
+using AetherSenseRedux.Toy;
 using XIVChatTypes;
 
 namespace AetherSenseRedux.Trigger

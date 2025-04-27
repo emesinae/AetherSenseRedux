@@ -15,6 +15,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using AetherSenseRedux.Hooks;
+using AetherSenseRedux.Toy;
 using AetherSenseRedux.Trigger.Emote;
 using Lumina.Excel.Sheets;
 

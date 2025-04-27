@@ -3,6 +3,7 @@ using System.Collections;
 using System.Linq;
 using System.Collections.Generic;
 using AetherSenseRedux.Pattern;
+using AetherSenseRedux.Toy;
 using AetherSenseRedux.Trigger.Emote;
 using Microsoft.CSharp.RuntimeBinder;
 using Newtonsoft.Json.Linq;

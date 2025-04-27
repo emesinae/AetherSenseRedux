@@ -7,7 +7,7 @@ using AetherSenseRedux.Pattern;
 using Buttplug.Client;
 using System.Threading;
 
-namespace AetherSenseRedux
+namespace AetherSenseRedux.Toy
 {
     internal class Device : IDisposable
     {
