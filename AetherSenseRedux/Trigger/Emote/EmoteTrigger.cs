@@ -14,7 +14,6 @@ internal class EmoteTrigger : ITrigger
     public bool Enabled { get; set; }
     public string Type { get; } = "EmoteTrigger";
     public string Name { get; init; }
-    public List<Device> Devices { get; init; }
     public List<string> EnabledDevices { get; init; }
     public PatternConfig PatternSettings { get; init; }
     private EmoteTriggerConfig Configuration { get; init; }
@@ -25,13 +24,12 @@ internal class EmoteTrigger : ITrigger
     private DateTime RetriggerTime { get; set; }
     private Guid Guid { get; set; }
 
-    public EmoteTrigger(EmoteTriggerConfig configuration, ref List<Device> devices)
+    public EmoteTrigger(EmoteTriggerConfig configuration)
     {
         // ITrigger properties
         Enabled = true;
         Configuration = configuration;
         Name = configuration.Name;
-        Devices = devices;
         EnabledDevices = configuration.EnabledDevices;
         PatternSettings = PatternFactory.GetPatternConfigFromObject(configuration.PatternSettings);
 
@@ -71,14 +69,12 @@ internal class EmoteTrigger : ITrigger
                 RetriggerTime = DateTime.UtcNow + TimeSpan.FromMilliseconds(RetriggerDelay);
             }
         }
-        lock (Devices)
+
+        foreach (var device in Service.Plugin.DeviceService.Devices.Where(device => EnabledDevices.Contains(device.Name)))
         {
-            foreach (var device in Devices.Where(device => EnabledDevices.Contains(device.Name)))
+            lock (device.Patterns)
             {
-                lock (device.Patterns)
-                {
-                    device.Patterns.Add(PatternFactory.GetPatternFromObject(PatternSettings));
-                }
+                device.Patterns.Add(PatternFactory.GetPatternFromObject(PatternSettings));
             }
         }
     }

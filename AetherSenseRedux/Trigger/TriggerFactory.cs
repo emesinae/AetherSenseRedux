@@ -12,12 +12,12 @@ namespace AetherSenseRedux.Trigger
 {
     internal class TriggerFactory
     {
-        public static ITrigger GetTriggerFromConfig(TriggerConfig config, ref List<Device> devices)
+        public static ITrigger GetTriggerFromConfig(TriggerConfig config)
         {
             return config.Type switch
             {
-                "Chat" => new ChatTrigger((ChatTriggerConfig)config, ref devices),
-                "Emote" => new EmoteTrigger((EmoteTriggerConfig)config, ref devices),
+                "Chat" => new ChatTrigger((ChatTriggerConfig)config),
+                "Emote" => new EmoteTrigger((EmoteTriggerConfig)config),
                 _ => throw new ArgumentException($"Invalid trigger {config.Type} specified")
             };
         }
