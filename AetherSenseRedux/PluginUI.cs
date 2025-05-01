@@ -136,14 +136,14 @@ namespace AetherSenseRedux
                             _workingCopy.Address = address;
                         }
                         ImGui.SameLine();
-                        if (Service.Plugin.Status == ButtplugStatus.Connected)
+                        if (Service.Plugin.DeviceService.Status == ButtplugStatus.Connected)
                         {
                             if (ImGui.Button("Disconnect"))
                             {
                                 Service.Plugin.Stop(true);
                             }
                         }
-                        else if (Service.Plugin.Status == ButtplugStatus.Connecting || Service.Plugin.Status == ButtplugStatus.Disconnecting)
+                        else if (Service.Plugin.DeviceService.Status == ButtplugStatus.Connecting || Service.Plugin.DeviceService.Status == ButtplugStatus.Disconnecting)
                         {
                             if (ImGui.Button("Wait..."))
                             {
@@ -161,23 +161,23 @@ namespace AetherSenseRedux
 
                         ImGui.Spacing();
                         ImGui.BeginChild("status", new Vector2(0, 0), true);
-                        if (Service.Plugin.WaitType == WaitType.Slow_Timer)
+                        if (Service.Plugin.DeviceService.WaitType == WaitType.Slow_Timer)
                         {
                             ImGui.TextColored(new Vector4(1, 0, 0, 1), "High resolution timers not available, patterns will be inaccurate.");
                         }
                         ImGui.Text("Connection Status:");
                         ImGui.Indent();
-                        ImGui.Text(Service.Plugin.Status == ButtplugStatus.Connected ? "Connected" : Service.Plugin.Status == ButtplugStatus.Connecting ? "Connecting..." : Service.Plugin.Status == ButtplugStatus.Error ? "Error" : "Disconnected");
-                        if (Service.Plugin.LastException != null)
+                        ImGui.Text(Service.Plugin.DeviceService.Status == ButtplugStatus.Connected ? "Connected" : Service.Plugin.DeviceService.Status == ButtplugStatus.Connecting ? "Connecting..." : Service.Plugin.DeviceService.Status == ButtplugStatus.Error ? "Error" : "Disconnected");
+                        if (Service.Plugin.DeviceService.LastException != null)
                         {
-                            ImGui.Text(Service.Plugin.LastException.Message);
+                            ImGui.Text(Service.Plugin.DeviceService.LastException.Message);
                         }
                         ImGui.Unindent();
-                        if (Service.Plugin.Status == ButtplugStatus.Connected)
+                        if (Service.Plugin.DeviceService.Status == ButtplugStatus.Connected)
                         {
                             ImGui.Text("Devices Connected:");
                             ImGui.Indent();
-                            foreach (var device in Service.Plugin.ConnectedDevices)
+                            foreach (var device in Service.Plugin.DeviceService.ConnectedDevices)
                             {
                                 ImGui.Text($"{device.Key} - {(int)(device.Value.LastIntensity * 100)}%% [{(int)device.Value.UPS}]");
                             }

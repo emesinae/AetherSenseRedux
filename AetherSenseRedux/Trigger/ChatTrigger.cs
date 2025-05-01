@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.Collections.Concurrent;
+using AetherSenseRedux.Toy;
 using XIVChatTypes;
 
 namespace AetherSenseRedux.Trigger
@@ -18,7 +19,6 @@ namespace AetherSenseRedux.Trigger
         public bool Enabled { get; set; }
         public string Type { get; } = "ChatTrigger";
         public string Name { get; init; }
-        public List<Device> Devices { get; init; }
         public List<string> EnabledDevices { get; init; }
         public PatternConfig PatternSettings { get; init; }
         private XIVChatFilter Filter { get; init; }
@@ -37,12 +37,11 @@ namespace AetherSenseRedux.Trigger
         /// <param name="configuration">The configuration object for this trigger.</param>
         /// <param name="devices">A reference to the list of Buttplug Devices.</param>
         /// <returns>A ChatTrigger object.</returns>
-        public ChatTrigger(ChatTriggerConfig configuration, ref List<Device> devices)
+        public ChatTrigger(ChatTriggerConfig configuration)
         {
             // ITrigger properties
             Enabled = true;
             Name = configuration.Name;
-            Devices = devices;
             EnabledDevices = configuration.EnabledDevices;
             PatternSettings = PatternFactory.GetPatternConfigFromObject(configuration.PatternSettings);
 
@@ -88,19 +87,17 @@ namespace AetherSenseRedux.Trigger
                     RetriggerTime = DateTime.UtcNow + TimeSpan.FromMilliseconds(RetriggerDelay);
                 }
             }
-            lock (Devices)
-            {
-                foreach (Device device in Devices)
-                {
-                    if (EnabledDevices.Contains(device.Name))
-                    {
-                        lock (device.Patterns)
-                        {
-                            device.Patterns.Add(PatternFactory.GetPatternFromObject(PatternSettings));
-                        }
-                    }
 
+            foreach (Device device in Service.Plugin.DeviceService.Devices)
+            {
+                if (EnabledDevices.Contains(device.Name))
+                {
+                    lock (device.Patterns)
+                    {
+                        device.Patterns.Add(PatternFactory.GetPatternFromObject(PatternSettings));
+                    }
                 }
+
             }
         }
 
