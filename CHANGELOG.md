@@ -1,4 +1,17 @@
 # Change Log
+<a name="1.1.1"></a>
+## [1.1.1](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.1.1) (2025-05-07)
+
+### 🐛 Bug Fixes
+
+* always clear triggers to prevent duplicates ([#11](https://www.github.com/emesinae/AetherSenseRedux/issues/11)) ([25383aa](https://www.github.com/emesinae/AetherSenseRedux/commit/25383aa616f2ecca8e798927191e427822294edd))
+* **connection:** reduce disconnects and device freezes ([#10](https://www.github.com/emesinae/AetherSenseRedux/issues/10)) ([0506fe4](https://www.github.com/emesinae/AetherSenseRedux/commit/0506fe4d4f75a696d715029f4df942a690d208a1))
+
+### Other
+
+* move device management code into `DeviceService` ([#20](https://www.github.com/emesinae/AetherSenseRedux/issues/20)) ([09791ed](https://www.github.com/emesinae/AetherSenseRedux/commit/09791ed65cb8b964d694451cfa4a92b25ff4396a))
+* **release:** 1.1.0 ([6fc8b4f](https://www.github.com/emesinae/AetherSenseRedux/commit/6fc8b4f9661d40820a6b11f927aa4b4bc707e25b))
+
 <a name="1.1.0"></a>
 ## [1.1.0](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.1.0) (2025-04-25)
 
