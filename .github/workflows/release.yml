@@ -39,7 +39,7 @@ jobs:
         run: versionize --dry-run
       - name: Versionize Release
         id: versionize
-        run: versionize --exit-insignificant-commits
+        run: versionize
         continue-on-error: true
       - name: No release required
         if: steps.versionize.outcome != 'success'
