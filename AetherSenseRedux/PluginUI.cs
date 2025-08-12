@@ -1,6 +1,6 @@
 ﻿using AetherSenseRedux.Pattern;
 using AetherSenseRedux.Trigger;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -196,7 +196,8 @@ namespace AetherSenseRedux
                         foreach (var (t, i) in _workingCopy.Triggers.Select((value, i) => (value, i)))
                         {
                             ImGui.PushID(i); // We push the iterator to the ID stack so multiple triggers of the same type and name are still distinct
-                            if (ImGui.Selectable($"{t.Name} ({t.Type})", _selectedTrigger == i))
+                            var label = $"{t.Name} ({t.Type})";
+                            if (ImGui.Selectable(label, _selectedTrigger == i))
                             {
                                 _selectedTrigger = i;
                             }
