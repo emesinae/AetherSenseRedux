@@ -4,7 +4,7 @@ using System.Linq;
 using System.Numerics;
 using AetherSenseRedux.Util;
 using Dalamud.Interface.Colors;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using Lumina.Excel.Sheets;
 
 namespace AetherSenseRedux.UI;
@@ -82,7 +82,7 @@ public class EmoteSelectionModal
 
                 unsafe
                 {
-                    var clipper = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
+                    var clipper = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper());
                     clipper.Begin(FilteredEmotes.Count);
                     while (clipper.Step())
                     {
@@ -209,7 +209,7 @@ public class EmoteSelectionModal
         {
             unsafe
             {
-                var sortSpec = sortSpecs.Specs.NativePtr[n];
+                var sortSpec = sortSpecs.Specs[n];
 
                 var delta = 0;
                 switch (sortSpec.ColumnUserID)
