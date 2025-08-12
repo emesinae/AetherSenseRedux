@@ -1,4 +1,13 @@
 # Change Log
+<a name="1.1.2"></a>
+## [1.1.2](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.1.2) (2025-08-12)
+
+### Other
+
+* **ci:** stop ignoring insignificant commits on release ([#22](https://www.github.com/emesinae/AetherSenseRedux/issues/22)) ([7bd81bd](https://www.github.com/emesinae/AetherSenseRedux/commit/7bd81bd89de7b0c27f79daa48f3bf8ce37e3c83a))
+* **deps:** update to dalamud v13 ([#21](https://www.github.com/emesinae/AetherSenseRedux/issues/21)) ([2217532](https://www.github.com/emesinae/AetherSenseRedux/commit/22175328843a26fb0a279ee78f3c533e330a292d))
+* **release:** 1.1.1 ([b931bcf](https://www.github.com/emesinae/AetherSenseRedux/commit/b931bcfeb972e119127870900aa8b32b559cd991))
+
 <a name="1.1.1"></a>
 ## [1.1.1](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.1.1) (2025-05-07)
 
