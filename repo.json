@@ -8,7 +8,7 @@
     "Punchline": "Advanced haptic feedback using Intiface",
     "RepoUrl": "https://github.com/emesinae/AetherSenseRedux",
     "AcceptsFeedback": true,
-    "DalamudApiLevel": 12,
+    "DalamudApiLevel": 13,
     "AssemblyVersion": "1.1.2",
     "DownloadLinkInstall": "https://github.com/emesinae/AetherSenseRedux/releases/download/v1.1.2/AetherSenseRedux.zip",
     "DownloadLinkUpdate": "https://github.com/emesinae/AetherSenseRedux/releases/download/v1.1.2/AetherSenseRedux.zip"
