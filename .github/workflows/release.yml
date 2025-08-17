@@ -15,6 +15,9 @@ jobs:
           # submodules: recursive
           fetch-depth: 0
           fetch-tags: true
+      - uses: hustcer/setup-nu@v3
+        with:
+          version: "*"
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -77,20 +80,26 @@ jobs:
           generate_release_notes: true
           files: |
             ./AetherSenseRedux.zip
-
       - name: Write out repo.json
+        id: generate_repo_file
         if: steps.versionize.outcome == 'success'
+        shell: nu {0}
         run: |
-          $ver = '${{ steps.version.outputs.VERSION }}'
-          $path = './repo.json'
-          $json = Get-Content -Raw $path | ConvertFrom-Json
-          $json[0].AssemblyVersion = $ver
-          $json[0].DownloadLinkInstall = $json.DownloadLinkInstall -replace '[^/]+/AetherSenseRedux.zip',"v$ver/AetherSenseRedux.zip"
-          $json[0].DownloadLinkUpdate = $json.DownloadLinkUpdate -replace '[^/]+/AetherSenseRedux.zip',"v$ver/AetherSenseRedux.zip"
-          $content = $json | ConvertTo-Json -AsArray
-          set-content -Path $path -Value $content
+          const version = '${{ steps.version.outputs.VERSION }}'
+          const releaseAssets = '${{ steps.create_release.outputs.assets }}' | from json
+          const downloadUrl = $releaseAssets.0.browser_download_url
+          const outputPath = './repo.json'
+
+          mut pkg = open './AetherSenseRedux/bin/Release/AetherSenseRedux.json'
+          $pkg = $pkg | merge {
+            DownloadLinkInstall: $downloadUrl,
+            DownloadLinkUpdate: $downloadUrl
+          }
+
+          let repo = [$pkg]
+          $repo | to json | save -f $outputPath
       - name: Commit repo.json
-        if: steps.versionize.outcome == 'success'
+        if: steps.versionize.outcome == 'success' && steps.generate_repo_file.outcome == 'success'
         run: |
           git add repo.json
           git commit --amend --no-edit || true

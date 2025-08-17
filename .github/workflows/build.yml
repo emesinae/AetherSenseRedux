@@ -17,6 +17,9 @@ jobs:
         uses: actions/checkout@v3.3.0
         with:
           fetch-depth: 0
+      # - uses: hustcer/setup-nu@v3
+      #   with:
+      #     version: "*"
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v4
         with:
@@ -28,13 +31,14 @@ jobs:
           Invoke-WebRequest -Uri https://goatcorp.github.io/dalamud-distrib/stg/latest.zip -OutFile latest.zip
           Expand-Archive -Force latest.zip "$env:AppData\XIVLauncher\addon\Hooks\dev"
       - name: Build with dotnet
+        id: build
         run: dotnet build --configuration Release --nologo ./AetherSenseRedux.sln
       - name: dotnet test
         run: dotnet test --configuration Release --nologo ./AetherSenseRedux.sln
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AetherSenseRedux-${{ matrix.os }}
+          name: AetherSenseRedux-${{ matrix.os }}-build
           path: |
             ./AetherSenseRedux/bin/Release/*.nupkg
             ./AetherSenseRedux/bin/Release/*.snupkg
@@ -44,3 +48,22 @@ jobs:
             ./AetherSenseRedux/bin/Release/**/AetherSenseRedux*.deps.json
             ./AetherSenseRedux/bin/Release/*.dll
             ./AetherSenseRedux/bin/Release/AetherSenseRedux/latest.zip
+      - name: Upload a Plugin Artifact
+        id: upload_plugin
+        uses: actions/upload-artifact@v4
+        with:
+          name: AetherSenseRedux-${{ matrix.os }}
+          path: |
+            ./AetherSenseRedux/bin/Release/AetherSenseRedux/latest.zip
+      # - name: Test generating repo.json
+      #   if: steps.build.outcome == 'success'
+      #   shell: nu {0}
+      #   run: |
+      #     const downloadUrl = '${{ steps.upload_plugin.outputs.artifact-url }}'#
+      #     mut pkg = open './AetherSenseRedux/bin/Release/AetherSenseRedux.json'
+      #     $pkg = $pkg | merge {
+      #       DownloadLinkInstall: $downloadUrl,
+      #       DownloadLinkUpdate: $downloadUrl
+      #     }
+      #     # just echo the JSON for testing
+      #     [ $pkg ] | to json
