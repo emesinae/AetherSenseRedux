@@ -90,7 +90,7 @@ jobs:
           const outputPath = './repo.json'
 
           mut pkg = open './AetherSenseRedux/bin/Release/AetherSenseRedux.json'
-          let $pkg | merge {
+          $pkg = $pkg | merge {
             DownloadLinkInstall: $downloadUrl,
             DownloadLinkUpdate: $downloadUrl
           }
