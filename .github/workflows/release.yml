@@ -86,9 +86,10 @@ jobs:
         shell: nu {0}
         run: |
           const version = '${{ steps.version.outputs.VERSION }}'
-          const releaseAssets = '${{ steps.create_release.outputs.assets }}' | from json
-          const downloadUrl = $releaseAssets.0.browser_download_url
           const outputPath = './repo.json'
+
+          let releaseAssets = '${{ steps.create_release.outputs.assets }}' | from json
+          let downloadUrl = $releaseAssets.0.browser_download_url
 
           mut pkg = open './AetherSenseRedux/bin/Release/AetherSenseRedux.json'
           $pkg = $pkg | merge {
