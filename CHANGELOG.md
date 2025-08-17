@@ -1,4 +1,12 @@
 # Change Log
+<a name="1.1.4"></a>
+## [1.1.4](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.1.4) (2025-08-17)
+
+### Other
+
+* fix non-const expression ([#25](https://www.github.com/emesinae/AetherSenseRedux/issues/25)) ([1a51612](https://www.github.com/emesinae/AetherSenseRedux/commit/1a516123964918d6e3058df1735899ab59ad9d19))
+* manually bump version ([3726186](https://www.github.com/emesinae/AetherSenseRedux/commit/372618670add3a3a4d124199c68068c0a80bc212))
+
 <a name="1.1.2"></a>
 ## [1.1.2](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.1.2) (2025-08-12)
 

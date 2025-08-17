@@ -1,16 +1,26 @@
 [
   {
-    "Author": "digital pet, emesinae",
+    "Author": "Tama Gotchi (digital-pet), Emesinae",
     "Name": "AetherSense Redux (18+)",
     "InternalName": "AetherSenseRedux",
+    "AssemblyVersion": "1.1.4.0",
     "Description": "An advanced haptic feedback plugin for game controllers, adult toys, and more using the Buttplug.io library. Requires Intiface Desktop to operate.",
     "ApplicableVersion": "any",
-    "Punchline": "Advanced haptic feedback using Intiface",
     "RepoUrl": "https://github.com/emesinae/AetherSenseRedux",
-    "AcceptsFeedback": true,
+    "Tags": [
+      "parsing",
+      "buttplug",
+      "haptic",
+      "erp"
+    ],
     "DalamudApiLevel": 13,
-    "AssemblyVersion": "1.1.2",
-    "DownloadLinkInstall": "https://github.com/emesinae/AetherSenseRedux/releases/download/v1.1.2/AetherSenseRedux.zip",
-    "DownloadLinkUpdate": "https://github.com/emesinae/AetherSenseRedux/releases/download/v1.1.2/AetherSenseRedux.zip"
+    "LoadRequiredState": 0,
+    "LoadSync": false,
+    "CanUnloadAsync": false,
+    "LoadPriority": 0,
+    "Punchline": "Advanced haptic feedback using Intiface",
+    "AcceptsFeedback": true,
+    "DownloadLinkInstall": "https://github.com/emesinae/AetherSenseRedux/releases/download/v1.1.4/AetherSenseRedux.zip",
+    "DownloadLinkUpdate": "https://github.com/emesinae/AetherSenseRedux/releases/download/v1.1.4/AetherSenseRedux.zip"
   }
 ]
