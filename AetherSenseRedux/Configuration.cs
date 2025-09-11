@@ -1,6 +1,7 @@
 ﻿using AetherSenseRedux.Pattern;
 using AetherSenseRedux.Trigger;
 using Dalamud.Configuration;
+using Microsoft.CSharp.RuntimeBinder;
 using System;
 using System.Collections.Generic;
 
@@ -9,9 +10,18 @@ namespace AetherSenseRedux
     [Serializable]
     public class Configuration : IPluginConfiguration
     {
+        public enum CombineMode
+        {
+            Average,
+            Maximum,
+            Add,
+            Asymptotic,
+        }
+
         public int Version { get; set; } = 2;
         public bool FirstRun = true;
         public bool LogChat { get; set; } = false;
+        public CombineMode Combiner { get; set; } = CombineMode.Add;
         public string Address { get; set; } = "ws://127.0.0.1:12345";
         public List<string> SeenDevices { get; set; } = new();
         public List<dynamic> Triggers { get; set; } = new List<dynamic>();
@@ -93,6 +103,14 @@ namespace AetherSenseRedux
                 }
                 FirstRun = o.FirstRun;
                 LogChat = o.LogChat;
+                try
+                {
+                    Combiner = o.Combiner;
+                }
+                catch (RuntimeBinderException ex)
+                {
+                    Service.PluginLog.Info(ex, "Combiner wasn't available; is this an older config file? Defaulting to AddClamped.");
+                }
                 Address = o.Address;
                 SeenDevices = new List<string>(o.SeenDevices);
                 Triggers = o.Triggers;

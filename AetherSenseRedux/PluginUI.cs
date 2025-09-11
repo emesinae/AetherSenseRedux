@@ -271,6 +271,21 @@ namespace AetherSenseRedux
                         {
                             _workingCopy.LoadDefaults();
                         }
+
+                        if (ImGui.BeginCombo("Combine Mode", _workingCopy.Combiner.ToString()))
+                        {
+                            foreach (Configuration.CombineMode mode in Enum.GetValues(typeof(Configuration.CombineMode)))
+                            {
+                                if (ImGui.Selectable(mode.ToString(), mode == _workingCopy.Combiner))
+                                {
+                                    _workingCopy.Combiner = mode;
+                                }
+
+                                if (mode == _workingCopy.Combiner) ImGui.SetItemDefaultFocus();
+                            }
+                            ImGui.EndCombo();
+                        }
+
                         ImGui.EndTabItem();
                     }
                     ImGui.EndTabBar();

@@ -26,10 +26,11 @@ internal class DeviceService : IDisposable, IAsyncDisposable
     private ButtplugStatus _status;
     public bool Connected => _buttplug?.Connected ?? false;
     public Exception? LastException { get; set; }
+    private readonly Configuration configuration;
 
-
-    public DeviceService()
+    public DeviceService(Configuration configuration)
     {
+        this.configuration = configuration;
         this._devicePool = [];
         _status = ButtplugStatus.Disconnected;
 
@@ -299,7 +300,7 @@ internal class DeviceService : IDisposable, IAsyncDisposable
     {
 
         Service.PluginLog.Information("Device {0} added", e.Device.Name);
-        Device newDevice = new(e.Device, WaitType);
+        Device newDevice = new(this.configuration, e.Device, WaitType);
         lock (this._devicePool)
         {
             this._devicePool.Add(newDevice);
