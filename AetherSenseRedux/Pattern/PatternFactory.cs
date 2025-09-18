@@ -22,6 +22,8 @@ namespace AetherSenseRedux.Pattern
                     return new RandomPattern((RandomPatternConfig)settings);
                 case "Square":
                     return new SquarePattern((SquarePatternConfig)settings);
+                case "UserCurve":
+                    return new UserCurvePattern((UserCurvePatternConfig)settings);
                 default:
                     throw new ArgumentException(String.Format("Invalid pattern {0} specified", settings.Type));
             }
@@ -41,6 +43,8 @@ namespace AetherSenseRedux.Pattern
                     return RandomPattern.GetDefaultConfiguration();
                 case "Square":
                     return SquarePattern.GetDefaultConfiguration();
+                case "UserCurve":
+                    return UserCurvePattern.GetDefaultConfiguration();
                 default:
                     throw new ArgumentException(String.Format("Invalid pattern {0} specified", name));
             }
@@ -87,6 +91,19 @@ namespace AetherSenseRedux.Pattern
                         Level1 = (double)o.Level1,
                         Level2 = (double)o.Level2,
                         Offset = (long)o.Offset
+                    };
+                case "UserCurve":
+                    List<ControlPoint> points = new();
+                    foreach (dynamic point in o.ControlPoints)
+                    {
+                        points.Add(new((double)point.Time, (double)point.Intensity));
+                    }
+
+                    return new UserCurvePatternConfig()
+                    {
+                        Duration = (long)o.Duration,
+                        Tension = (double)o.Tension,
+                        ControlPoints = points.ToArray()
                     };
                 default:
                     throw new ArgumentException(String.Format("Invalid pattern {0} specified", o.Type));
