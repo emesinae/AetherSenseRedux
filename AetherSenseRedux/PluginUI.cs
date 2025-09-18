@@ -93,7 +93,7 @@ namespace AetherSenseRedux
             ////
             ////    SETTINGS WINDOW
             ////
-            ImGui.SetNextWindowSize(new Vector2(640, 400), ImGuiCond.Appearing);
+            ImGui.SetNextWindowSize(new Vector2(640, 500), ImGuiCond.Appearing);
             if (ImGui.Begin("AetherSense Redux", ref _settingsVisible, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.MenuBar))
             {
 
@@ -716,6 +716,24 @@ namespace AetherSenseRedux
                     ImGui.EndCombo();
                 }
                 //end pattern selection
+
+                // begin preview plot
+                try
+                {
+                    IPattern pattern = PatternFactory.GetPatternFromObject(t.PatternSettings);
+
+                    float[] values = new float[t.PatternSettings.Duration];
+                    for (int i = 0; i < t.PatternSettings.Duration; ++i)
+                    {
+                        values[i] = (float)pattern.GetIntensityAtTime(pattern.Expires - TimeSpan.FromMilliseconds(t.PatternSettings.Duration - i));
+                    }
+                    ImGui.PlotLines("Preview", values, values.Length, default, float.MaxValue, float.MaxValue, new Vector2(0, 128));
+                }
+                catch (Exception e)
+                {
+                    ImGui.Text("Unable to preview: " + e.Message);
+                }
+                // end preview plot
 
                 ImGui.SameLine();
 
