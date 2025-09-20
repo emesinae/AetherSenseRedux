@@ -248,7 +248,6 @@ namespace AetherSenseRedux
                         if (_workingCopy.Triggers.Count == 0 || _selectedTrigger < 0 || _selectedTrigger >= _workingCopy.Triggers.Count)
                         {
                             ImGui.Text("Use the Add New button to add a trigger.");
-
                         }
                         else
                         {
@@ -737,7 +736,7 @@ namespace AetherSenseRedux
                 }
                 else
                 {
-                        ImGui.Text("Select a valid pattern.");
+                    ImGui.Text("Select a valid pattern.");
                 }
                 //end pattern settings
 
