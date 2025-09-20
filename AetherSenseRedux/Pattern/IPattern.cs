@@ -6,6 +6,17 @@ using System.Threading.Tasks;
 
 namespace AetherSenseRedux.Pattern
 {
+    internal interface IPatternType
+    {
+        public static readonly Dictionary<string, IPatternType> All = Util.Discovery.DefaultInstances<IPatternType>()
+            .ToDictionary(x => x.Name);
+
+        public abstract string Name { get; }
+        public PatternConfig GetDefaultConfiguration();
+        public PatternConfig DeserializeConfiguration(dynamic source);
+        public IPattern Create(PatternConfig config);
+        public void DrawSettings(PatternConfig config);
+    }
 
     internal interface IPattern
     {
