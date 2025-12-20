@@ -20,7 +20,7 @@
     "LoadPriority": 0,
     "Punchline": "Advanced haptic feedback using Intiface",
     "AcceptsFeedback": true,
-    "DownloadLinkInstall": "https://github.com/emesinae/AetherSenseRedux/releases/download/untagged-2ae614e7fecd6929a238/AetherSenseRedux.zip",
-    "DownloadLinkUpdate": "https://github.com/emesinae/AetherSenseRedux/releases/download/untagged-2ae614e7fecd6929a238/AetherSenseRedux.zip"
+    "DownloadLinkInstall": "https://github.com/emesinae/AetherSenseRedux/releases/download/v1.1.5/AetherSenseRedux.zip",
+    "DownloadLinkUpdate": "https://github.com/emesinae/AetherSenseRedux/releases/download/v1.1.5/AetherSenseRedux.zip"
   }
 ]
