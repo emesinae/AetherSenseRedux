@@ -118,8 +118,8 @@ namespace AetherSenseRedux
 
         private void OnEmoteReceived(EmoteEvent e)
         {
-            var isPerformer = e.Instigator.GameObjectId == Service.ClientState.LocalPlayer?.GameObjectId;
-            var isTarget = e.Target?.GameObjectId == Service.ClientState.LocalPlayer?.GameObjectId;
+            var isPerformer = e.Instigator.GameObjectId == Service.ObjectTable.LocalPlayer?.GameObjectId;
+            var isTarget = e.Target?.GameObjectId == Service.ObjectTable.LocalPlayer?.GameObjectId;
 
             var emote = Service.DataManager.GetExcelSheet<Emote>().GetRowOrDefault(e.EmoteId);
 

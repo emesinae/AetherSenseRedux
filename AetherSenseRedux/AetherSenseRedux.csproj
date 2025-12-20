@@ -1,16 +1,16 @@
-<Project Sdk="Dalamud.NET.SDK/13.0.0">
+<Project Sdk="Dalamud.NET.SDK/14.0.0">
 
   <PropertyGroup>
     <Authors>Tama Gotchi (digital-pet),Emesinae</Authors>
     <Company></Company>
     <Product>AetherSenseRedux</Product>
     <Title>AetherSenseRedux</Title>
-    <Version>1.1.4</Version>
+    <Version>1.1.5</Version>
     <FileVersion>0.1.0.1</FileVersion>
     <Description>Buttplugs on the moon</Description>
     <Copyright>All Rights Reserved</Copyright>
     <PackageProjectUrl>https://github.com/emesinae/AetherSenseRedux</PackageProjectUrl>
-    <TargetFramework>net9.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>x64</Platforms>
     <Nullable>enable</Nullable>
     <LangVersion>13</LangVersion>
@@ -26,7 +26,7 @@
 	
   <ItemGroup>
     <PackageReference Include="Buttplug" Version="4.0.0" />
-    <PackageReference Update="DalamudPackager" Version="13.0.0" />
+    <PackageReference Update="DalamudPackager" Version="14.0.1" />
   </ItemGroup>
 	
 </Project>
