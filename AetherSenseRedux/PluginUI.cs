@@ -245,10 +245,9 @@ namespace AetherSenseRedux
 
                         ImGui.BeginChild("right", new Vector2(0, 0), false);
                         ImGui.Indent(1);
-                        if (_workingCopy.Triggers.Count == 0)
+                        if (_workingCopy.Triggers.Count == 0 || _selectedTrigger < 0 || _selectedTrigger >= _workingCopy.Triggers.Count)
                         {
                             ImGui.Text("Use the Add New button to add a trigger.");
-
                         }
                         else
                         {
@@ -693,19 +692,17 @@ namespace AetherSenseRedux
             ////
             if (ImGui.BeginTabItem("Pattern"))
             {
-                string[] patterns = ["Constant", "Ramp", "Random", "Square", "Saw"];
-
                 //begin pattern selection
                 if (ImGui.BeginCombo("##combo", t.PatternSettings!.Type))
                 {
-                    foreach (var pattern in patterns)
+                    foreach (var pattern in IPatternType.All)
                     {
-                        bool isSelected = t.PatternSettings.Type == pattern;
-                        if (ImGui.Selectable(pattern, isSelected))
+                        bool isSelected = t.PatternSettings.Type == pattern.Key;
+                        if (ImGui.Selectable(pattern.Key, isSelected))
                         {
-                            if (t.PatternSettings.Type != pattern)
+                            if (t.PatternSettings.Type != pattern.Key)
                             {
-                                t.PatternSettings = PatternFactory.GetDefaultsFromString(pattern);
+                                t.PatternSettings = pattern.Value.GetDefaultConfiguration();
                             }
                         }
                         if (isSelected)
@@ -733,163 +730,19 @@ namespace AetherSenseRedux
                 ImGui.Indent();
 
                 //begin pattern settings
-                switch ((string)t.PatternSettings.Type)
+                if (IPatternType.All.TryGetValue((string)t.PatternSettings.Type, out IPatternType? activeType))
                 {
-                    case "Constant":
-                        DrawConstantPatternSettings(t.PatternSettings);
-                        break;
-                    case "Ramp":
-                        DrawRampPatternSettings(t.PatternSettings);
-                        break;
-                    case "Saw":
-                        DrawSawPatternSettings(t.PatternSettings);
-                        break;
-                    case "Random":
-                        DrawRandomPatternSettings(t.PatternSettings);
-                        break;
-                    case "Square":
-                        DrawSquarePatternSettings(t.PatternSettings);
-                        break;
-                    default:
-                        //we should never get here but just in case
-                        ImGui.Text("Select a valid pattern.");
-                        break;
+                    activeType.DrawSettings(t.PatternSettings);
+                }
+                else
+                {
+                    ImGui.Text("Select a valid pattern.");
                 }
                 //end pattern settings
 
                 ImGui.Unindent();
 
                 ImGui.EndTabItem();
-            }
-        }
-
-        /// <summary>
-        /// Draws the configuration interface for constant patterns
-        /// </summary>
-        /// <param name="pattern">A ConstantPatternConfig object containing the current configuration for the pattern.</param>
-        private static void DrawConstantPatternSettings(dynamic pattern)
-        {
-            int duration = (int)pattern.Duration;
-            if (ImGui.InputInt("Duration (ms)", ref duration))
-            {
-                pattern.Duration = (long)duration;
-            }
-            double level = (double)pattern.Level;
-            if (ImGui.InputDouble("Level", ref level))
-            {
-                pattern.Level = level;
-            }
-        }
-
-        /// <summary>
-        /// Draws the configuration interface for ramp patterns
-        /// </summary>
-        /// <param name="pattern">A RampPatternConfig object containing the current configuration for the pattern.</param>
-        private static void DrawRampPatternSettings(dynamic pattern)
-        {
-            int duration = (int)pattern.Duration;
-            if (ImGui.InputInt("Duration (ms)", ref duration))
-            {
-                pattern.Duration = (long)duration;
-            }
-            double start = (double)pattern.Start;
-            if (ImGui.InputDouble("Start", ref start))
-            {
-                pattern.Start = start;
-            }
-            double end = (double)pattern.End;
-            if (ImGui.InputDouble("End", ref end))
-            {
-                pattern.End = end;
-            }
-        }
-
-        /// <summary>
-        /// Draws the configuration interface for saw patterns
-        /// </summary>
-        /// <param name="pattern">A SawPatternConfig object containing the current configuration for the pattern.</param>
-        private static void DrawSawPatternSettings(dynamic pattern)
-        {
-            int duration = (int)pattern.Duration;
-            if (ImGui.InputInt("Duration (ms)", ref duration))
-            {
-                pattern.Duration = (long)duration;
-            }
-            double start = (double)pattern.Start;
-            if (ImGui.InputDouble("Start", ref start))
-            {
-                pattern.Start = start;
-            }
-            double end = (double)pattern.End;
-            if (ImGui.InputDouble("End", ref end))
-            {
-                pattern.End = end;
-            }
-            int duration1 = (int)pattern.Duration1;
-            if (ImGui.InputInt("Saw Duration (ms)", ref duration1))
-            {
-                pattern.Duration1 = (long)duration1;
-            }
-        }
-
-        /// <summary>
-        /// Draws the configuration interface for random patterns
-        /// </summary>
-        /// <param name="pattern">A RandomPatternConfig object containing the current configuration for the pattern.</param>
-        private static void DrawRandomPatternSettings(dynamic pattern)
-        {
-            int duration = (int)pattern.Duration;
-            if (ImGui.InputInt("Duration (ms)", ref duration))
-            {
-                pattern.Duration = (long)duration;
-            }
-            double min = (double)pattern.Minimum;
-            if (ImGui.InputDouble("Minimum", ref min))
-            {
-                pattern.Minimum = min;
-            }
-            double max = (double)pattern.Maximum;
-            if (ImGui.InputDouble("Maximum", ref max))
-            {
-                pattern.Maximum = max;
-            }
-        }
-
-        /// <summary>
-        /// Draws the configuration interface for square patterns
-        /// </summary>
-        /// <param name="pattern">A SquarePatternConfig object containing the current configuration for the pattern.</param>
-        private static void DrawSquarePatternSettings(dynamic pattern)
-        {
-            int duration = (int)pattern.Duration;
-            if (ImGui.InputInt("Duration (ms)", ref duration))
-            {
-                pattern.Duration = (long)duration;
-            }
-            double level1 = (double)pattern.Level1;
-            if (ImGui.InputDouble("Level 1", ref level1))
-            {
-                pattern.Level1 = level1;
-            }
-            int duration1 = (int)pattern.Duration1;
-            if (ImGui.InputInt("Level 1 Duration (ms)", ref duration1))
-            {
-                pattern.Duration1 = (long)duration1;
-            }
-            double level2 = (double)pattern.Level2;
-            if (ImGui.InputDouble("Level 2", ref level2))
-            {
-                pattern.Level2 = level2;
-            }
-            int duration2 = (int)pattern.Duration2;
-            if (ImGui.InputInt("Level 2 Duration (ms)", ref duration2))
-            {
-                pattern.Duration2 = (long)duration2;
-            }
-            int offset = (int)pattern.Offset;
-            if (ImGui.InputInt("Offset (ms)", ref offset))
-            {
-                pattern.Offset = (long)offset;
             }
         }
     }
