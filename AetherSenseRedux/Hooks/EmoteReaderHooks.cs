@@ -48,25 +48,25 @@ public class EmoteReaderHooks : IDisposable
 
     private void OnEmoteDetour(ulong unk, ulong instigatorAddr, ushort emoteId, ulong targetId, ulong unk2)
     {
-        if (Service.ClientState.LocalPlayer != null)
+        if (Service.ObjectTable.LocalPlayer != null)
         {
             var instigatorOb = Service.ObjectTable.FirstOrDefault(x => (ulong)x.Address == instigatorAddr);
             if (instigatorOb is IPlayerCharacter playerCharacter)
             {
                 // If a remote player performed the emote while targeting the local player
-                if (targetId == Service.ClientState.LocalPlayer.GameObjectId)
+                if (targetId == Service.ObjectTable.LocalPlayer.GameObjectId)
                 {
                     Service.PluginLog.Verbose(
-                        $"Player {instigatorOb.Name} used emote {emoteId} on target {Service.ClientState.LocalPlayer.Name} ({targetId:X})");
+                        $"Player {instigatorOb.Name} used emote {emoteId} on target {Service.ObjectTable.LocalPlayer.Name} ({targetId:X})");
                     OnEmote?.Invoke(new EmoteEvent
                     {
                         EmoteId = emoteId,
                         Instigator = playerCharacter,
-                        Target = Service.ClientState.LocalPlayer
+                        Target = Service.ObjectTable.LocalPlayer
                     });
                 }
                 // If the local player performed the emote
-                else if (instigatorOb.GameObjectId == Service.ClientState.LocalPlayer.GameObjectId)
+                else if (instigatorOb.GameObjectId == Service.ObjectTable.LocalPlayer.GameObjectId)
                 {
                     var targetOb = targetId != 0xE0000000
                         ? Service.ObjectTable.FirstOrDefault(x => x.GameObjectId == targetId)
@@ -80,7 +80,7 @@ public class EmoteReaderHooks : IDisposable
                     OnEmote?.Invoke(new EmoteEvent
                     {
                         EmoteId = emoteId,
-                        Instigator = Service.ClientState.LocalPlayer,
+                        Instigator = Service.ObjectTable.LocalPlayer,
                         Target = targetOb is IPlayerCharacter targetPc ? targetPc : null
                     });
                 }
