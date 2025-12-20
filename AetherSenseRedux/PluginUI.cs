@@ -179,7 +179,7 @@ namespace AetherSenseRedux
                             ImGui.Indent();
                             foreach (var device in Service.Plugin.DeviceService.ConnectedDevices)
                             {
-                                ImGui.Text($"{device.Key} - {(int)(device.Value.LastIntensity * 100)}%% [{(int)device.Value.UPS}]");
+                                ImGui.Text($"{device.Key} - {(int)(device.Value.LastIntensity * 100)}% [{(int)device.Value.UPS}]");
                             }
                             ImGui.Unindent();
                         }
