@@ -32,4 +32,7 @@ internal class Service
 
     [PluginService]
     internal static IDataManager DataManager { get; set; } = null!;
+
+    [PluginService]
+    internal static IPlayerState PlayerState { get; set; } = null!;
 }

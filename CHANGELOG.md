@@ -1,4 +1,16 @@
 # Change Log
+<a name="1.1.5"></a>
+## [1.1.5](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.1.5) (2025-12-20)
+
+### 🐛 Bug Fixes
+
+* **typo:** remove extra `%` character ([#31](https://www.github.com/emesinae/AetherSenseRedux/issues/31)) ([27cca3d](https://www.github.com/emesinae/AetherSenseRedux/commit/27cca3df5cda845f133a5a56118b3743caafdb9b))
+
+### Other
+
+* update dalamud to version 14 ([#30](https://www.github.com/emesinae/AetherSenseRedux/issues/30)) ([cee8671](https://www.github.com/emesinae/AetherSenseRedux/commit/cee86717c558454550500644ed90dec37b7cb662))
+* **release:** 1.1.4 ([57fae46](https://www.github.com/emesinae/AetherSenseRedux/commit/57fae46da597e2dad3b0506902833ab555d73232))
+
 <a name="1.1.4"></a>
 ## [1.1.4](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.1.4) (2025-08-17)
 
