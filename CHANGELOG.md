@@ -1,4 +1,11 @@
 # Change Log
+<a name="1.2.0-beta.2"></a>
+## [1.2.0-beta.2](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.2.0-beta.2) (2025-12-21)
+
+### Other
+
+* fix missing save command for repo json ([8c8c8d6](https://www.github.com/emesinae/AetherSenseRedux/commit/8c8c8d6fa600c191afe080206d52c088caf7622c))
+
 <a name="1.2.0-beta.1"></a>
 ## [1.2.0-beta.1](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.2.0-beta.1) (2025-12-21)
 
