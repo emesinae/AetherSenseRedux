@@ -107,7 +107,7 @@ jobs:
           }
 
           let repo = [$pkg]
-          $repo | to json
+          $repo | to json | save -f $repoFilePath
       - name: Commit repo.json
         if: steps.versionize.outcome == 'success' && steps.generate_repo_file.outcome == 'success'
         run: |
