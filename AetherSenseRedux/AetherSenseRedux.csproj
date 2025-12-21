@@ -28,5 +28,8 @@
     <PackageReference Include="Buttplug" Version="4.0.0" />
     <PackageReference Update="DalamudPackager" Version="14.0.1" />
   </ItemGroup>
-	
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="$(MSBuildProjectName).Tests" />
+  </ItemGroup>
 </Project>

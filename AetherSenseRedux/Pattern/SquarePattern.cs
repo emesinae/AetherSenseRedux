@@ -85,17 +85,26 @@ namespace AetherSenseRedux.Pattern
         private readonly double level2;
         private readonly long duration1;
         private readonly long offset;
-        private readonly long total_duration;
+        /// <summary>
+        ///  The sum of the two level durations. 
+        /// </summary>
+        private readonly long patternPeriod;
+
+        /// <summary>
+        /// The total length of time the pattern will run before it stops.
+        /// </summary>
+        private readonly long totalDuration;
 
 
         public SquarePattern(SquarePatternConfig config)
         {
             level1 = config.Level1;
             level2 = config.Level2;
+            totalDuration = config.Duration;
             duration1 = config.Duration1;
             offset = config.Offset;
             Expires = DateTime.UtcNow + TimeSpan.FromMilliseconds(config.Duration);
-            total_duration = duration1 + config.Duration2;
+            patternPeriod = duration1 + config.Duration2;
         }
 
         public double GetIntensityAtTime(DateTime time)
@@ -104,11 +113,10 @@ namespace AetherSenseRedux.Pattern
             {
                 throw new PatternExpiredException();
             }
-            long patternTime = DateTime.UtcNow.Ticks / 10000 + offset;
 
-            long progress = patternTime % total_duration;
-
-            return (progress < duration1) ? level1 : level2;
+            double relativeTime = totalDuration - (Expires - time).TotalMilliseconds;
+            double patternOffset = (relativeTime + offset) % patternPeriod;
+            return (patternOffset < duration1) ? level1 : level2;
         }
         public static PatternConfig GetDefaultConfiguration()
         {
@@ -126,3 +134,4 @@ namespace AetherSenseRedux.Pattern
         public long Offset { get; set; } = 0;
     }
 }
+
