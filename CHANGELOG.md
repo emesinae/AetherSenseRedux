@@ -1,4 +1,7 @@
 # Change Log
+<a name="1.2.0-beta.1"></a>
+## [1.2.0-beta.1](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.2.0-beta.1) (2025-12-21)
+
 <a name="1.2.0-beta.0"></a>
 ## [1.2.0-beta.0](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.2.0-beta.0) (2025-12-21)
 
