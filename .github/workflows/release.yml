@@ -122,7 +122,7 @@ jobs:
           tag_name: v${{ steps.version.outputs.VERSION }}
           name: AetherSenseRedux ${{ steps.version.outputs.VERSION }}
           draft: false
-          prerelease: false
+          prerelease: ${{ inputs.release_type != 'release' }}
           generate_release_notes: true
           files: |
             ./AetherSenseRedux.zip
