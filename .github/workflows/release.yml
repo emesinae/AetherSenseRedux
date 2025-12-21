@@ -5,6 +5,16 @@ on:
     tags-ignore:
       - testing_*
   workflow_dispatch:
+    inputs:
+      release_type:
+        description: "Release type"
+        required: true
+        type: choice
+        default: "release"
+        options:
+          - release
+          - alpha
+          - beta
 
 jobs:
   build:
@@ -39,10 +49,10 @@ jobs:
       - name: Install Versionize
         run: dotnet tool install --global Versionize
       - name: Versionize dry run
-        run: versionize --dry-run
+        run: versionize --dry-run ${{ inputs.release_type != 'release' && format('--pre-release {0}', inputs.release_type) || '' }}
       - name: Versionize Release
         id: versionize
-        run: versionize
+        run: versionize ${{ inputs.release_type != 'release' && format('--pre-release {0}', inputs.release_type) || '' }}
         continue-on-error: true
       - name: No release required
         if: steps.versionize.outcome != 'success'
@@ -74,19 +84,30 @@ jobs:
         shell: nu {0}
         run: |
           const version = '${{ steps.version.outputs.VERSION }}'
+          const releaseType = '${{ inputs.release_type }}'
           const repoFilePath = './repo.json'
+          let isPreRelease = $releaseType != 'release'
 
           let currentRepoFile = open $repoFilePath
           let downloadUrl = $currentRepoFile.0.DownloadLinkInstall | str replace -r '(v(\d+\.\d+\.\d+(-\w+)?))|(untagged-[0-9a-f]*)' $'v($version)'
 
-          mut pkg = open './AetherSenseRedux/bin/Release/AetherSenseRedux.json'
-          $pkg = $pkg | merge {
-            DownloadLinkInstall: $downloadUrl,
-            DownloadLinkUpdate: $downloadUrl
+          let newPkg = open './AetherSenseRedux/bin/Release/AetherSenseRedux.json'
+          mut pkg = null
+          if $isPreRelease != true {
+              $pkg = $newPkg | merge {
+                  DownloadLinkInstall: $downloadUrl,
+                  DownloadLinkUpdate: $downloadUrl
+              }
+          } else {
+              $pkg = $currentRepoFile.0 | merge {
+                  DownloadLinkTesting: $downloadUrl,
+                  TestingAssemblyVersion: $newPkg.AssemblyVersion,
+                  TestingDalamudApiLevel: $newPkg.DalamudApiLevel
+              }
           }
 
           let repo = [$pkg]
-          $repo | to json | save -f $repoFilePath
+          $repo | to json
       - name: Commit repo.json
         if: steps.versionize.outcome == 'success' && steps.generate_repo_file.outcome == 'success'
         run: |
