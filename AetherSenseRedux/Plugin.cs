@@ -49,12 +49,6 @@ namespace AetherSenseRedux
             Service.Plugin = this;
             Service.PluginInterface = PluginInterface;
 
-            this.DeviceService = new DeviceService();
-            this.DeviceService.DeviceAdded += DeviceServiceOnDeviceAdded;
-            this.DeviceService.Stopped += DeviceServiceOnStopped;
-            this._chatTriggerPool = [];
-            this._emoteTriggerPool = [];
-
             Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             Configuration.FixDeserialization();
 
@@ -70,6 +64,12 @@ namespace AetherSenseRedux
             {
                 Configuration.LoadDefaults();
             }
+
+            this.DeviceService = new DeviceService(Configuration);
+            this.DeviceService.DeviceAdded += DeviceServiceOnDeviceAdded;
+            this.DeviceService.Stopped += DeviceServiceOnStopped;
+            this._chatTriggerPool = [];
+            this._emoteTriggerPool = [];
 
             PluginUi = new PluginUI(Configuration);
 

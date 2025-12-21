@@ -24,6 +24,7 @@ namespace AetherSenseRedux.Toy
         private bool _active;
         private const int FrameTime = 16; // The target time per update, in this case 16ms = ~60 ups, and also a pipe dream for BLE toys.
         private readonly WaitType _waitType;
+        private readonly Configuration configuration;
 
         public DeviceStatus Status =>
             new()
@@ -32,8 +33,9 @@ namespace AetherSenseRedux.Toy
                 UPS = UPS,
             };
 
-        public Device(ButtplugClientDevice clientDevice, WaitType waitType)
+        public Device(Configuration configuration, ButtplugClientDevice clientDevice, WaitType waitType)
         {
+            this.configuration = configuration;
             ClientDevice = clientDevice;
             Patterns = new List<IPattern>();
             _lastIntensity = 0;
@@ -154,8 +156,30 @@ namespace AetherSenseRedux.Toy
                     Patterns.Remove(pattern);
                 }
             }
-            //TODO: Allow different merge modes besides average
-            double intensity = (intensities.Any()) ? intensities.Average() : 0;
+
+            double intensity = 0;
+
+            if (intensities.Any())
+            {
+                switch (configuration.Combiner)
+                {
+                    case Configuration.CombineMode.Average:
+                        intensity = intensities.Average();
+                        break;
+                    case Configuration.CombineMode.Maximum:
+                        intensity = intensities.Max();
+                        break;
+                    case Configuration.CombineMode.Add:
+                        intensity = intensities.Sum();
+                        break;
+                    case Configuration.CombineMode.Asymptotic:
+                        // TODO: Clamp component signals? Changes the behavior, though!
+                        // At least all patterns for now are 0..1 theoretically anyway...
+                        // Might be able to do something interesting with sub-zero patterns damping vibration.
+                        intensity = 1.0 - intensities.Aggregate(1.0, (combined, signal) => combined * (1 - signal));
+                        break;
+                }
+            }
 
             await Write(intensity);
         }
