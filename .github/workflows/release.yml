@@ -69,6 +69,47 @@ jobs:
         run: |
           invoke-expression 'dotnet build --no-restore --configuration Release --nologo'
 
+        # Dalamud does not seem to like version strings like "1.2.3-alpha.1"
+        # So, let's convert that to a format it can understand like "1.2.3.0001".
+        # This is a bit hacky, making alpha version start at 0 (formatted 0000, 0001, 0002,...)
+        # and then having beta versions start at 1000 (formatted 1000, 1001, 1002, ...).
+      - name: Adjust Assembly Version
+        id: adjust_assembly_version
+        if: steps.versionize.outcome == 'success'
+        shell: nu {0}
+        run: |
+          const version = '${{ steps.version.outputs.VERSION }}'
+          const assemblyJsonPath = './AetherSenseRedux/bin/Release/AetherSenseRedux.json' 
+
+          let parseResult = $version | parse --regex '(?P<version>\d+\.\d+\.\d+)(?:-(?P<prerelease>(?P<label>\w+)\.(?P<prerelease_version>\d+)))?'
+          let parsedVersion = $parseResult.0
+
+          if ($parsedVersion.prerelease | is-empty) {
+              print "Version is not a prerelease, no adjustment necessary."
+              return
+          }
+
+          print $"Found prerelease version: '($parsedVersion.prerelease)'"
+
+          let base = match $parsedVersion.label {
+              'alpha' => 0,
+              'beta' => 1000,
+              $other => {
+                  print $"Warning: unrecognized prerelease label '($other)'!"
+                  2000
+              }
+          }
+
+          let prereleaseId = $base + ($parsedVersion.prerelease_version | into int)
+
+          let newPkg = open $assemblyJsonPath 
+
+          let newAssemblyVersion = $"($parsedVersion.version).($prereleaseId | fill -a right -c 0 -w 4)"
+          print $"Using new assembly version: ($newAssemblyVersion)"
+          $newPkg | merge { 
+              AssemblyVersion: $newAssemblyVersion
+          } | save -f $assemblyJsonPath
+
       - name: Archive
         if: steps.versionize.outcome == 'success'
         run: Compress-Archive -Path AetherSenseRedux/bin/Release/* -DestinationPath AetherSenseRedux.zip
