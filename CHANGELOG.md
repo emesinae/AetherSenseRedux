@@ -1,4 +1,11 @@
 # Change Log
+<a name="1.2.0-beta.3"></a>
+## [1.2.0-beta.3](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.2.0-beta.3) (2025-12-22)
+
+### Other
+
+* add release step to adjust prerelease versions into dalamud-friendly format ([1248ef1](https://www.github.com/emesinae/AetherSenseRedux/commit/1248ef16d7cf6a4f74e947e6ba9e0b809682fb5a))
+
 <a name="1.2.0-beta.2"></a>
 ## [1.2.0-beta.2](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.2.0-beta.2) (2025-12-21)
 
