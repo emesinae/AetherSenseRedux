@@ -1,8 +1,142 @@
 using System;
+using System.Collections.Generic;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Style;
 
 namespace AetherSenseRedux.Pattern
 {
+    internal class UserCurvePatternType : IPatternType
+    {
+        public string Name => "UserCurve";
+
+        public IPattern Create(PatternConfig config)
+        {
+            return new UserCurvePattern((UserCurvePatternConfig)config);
+        }
+
+        public PatternConfig DeserializeConfiguration(dynamic source)
+        {
+            List<ControlPoint> points = new();
+            foreach (dynamic point in source.ControlPoints)
+            {
+                points.Add(new((double)point.Time, (double)point.Intensity));
+            }
+
+            return new UserCurvePatternConfig()
+            {
+                Duration = (long)source.Duration,
+                Tension = (double)source.Tension,
+                ControlPoints = points.ToArray()
+            };
+        }
+
+        public void DrawSettings(PatternConfig config)
+        {
+            UserCurvePatternConfig pattern = (UserCurvePatternConfig)config;
+            int duration = (int)pattern.Duration;
+            if (ImGui.SliderInt("Duration (ms)", ref duration, 1, 30000))
+            {
+                pattern.Duration = duration;
+            }
+
+            double tension = (double)pattern.Tension;
+            if (ImGui.SliderDouble("Tension (0..1)", ref tension, 0, 1))
+            {
+                pattern.Tension = tension;
+            }
+
+            ControlPoint[] controlPoints = new ControlPoint[pattern.ControlPoints.Length];
+            for (int i = 0; i < controlPoints.Length; ++i) controlPoints[i] = new(pattern.ControlPoints[i]);
+            bool pointsDirty = false;
+
+            if (controlPoints.Length < 2)
+            {
+                Array.Resize(ref controlPoints, 2);
+                controlPoints[0].Time = 0.0;
+                controlPoints[1].Time = 1.0;
+                pointsDirty = true;
+            }
+
+            for (int i = 0; i < controlPoints.Length; ++i)
+            {
+                double tsubn = controlPoints[i].Time;
+                double isubn = controlPoints[i].Intensity;
+                bool first = i <= 0;
+                bool last = i >= controlPoints.Length - 1;
+
+                ImGui.PushID($"Insert {i}");
+                if (!first && ImGui.Button("Insert"))
+                {
+                    Array.Resize(ref controlPoints, controlPoints.Length + 1);
+                    for (int j = controlPoints.Length - 1; j > i; --j) controlPoints[j] = controlPoints[j - 1];
+                    controlPoints[i] = new ControlPoint
+                    {
+                        Time = ((first ? 0 : controlPoints[i - 1].Time) + controlPoints[i + 1].Time) / 2,
+                        Intensity = ((first ? 0 : controlPoints[i - 1].Intensity) + controlPoints[i + 1].Intensity) / 2,
+                    };
+                    pointsDirty = true;
+                }
+                ImGui.PopID();
+
+                ImGui.Indent();
+                ImGui.BeginGroup();
+                ImGui.Text(first ? "Start" : (last ? "End" : $"Point {i + 1}"));
+
+                if (!first && !last)
+                {
+                    ImGui.SameLine();
+                    ImGui.PushID($"Delete {i}");
+                    if (ImGui.Button("Delete"))
+                    {
+                        for (int j = i; j < controlPoints.Length - 1; ++j)
+                        {
+                            controlPoints[j] = controlPoints[j + 1];
+                        }
+                        Array.Resize(ref controlPoints, controlPoints.Length - 1);
+                        pointsDirty = true;
+                        ImGui.PopID();
+                        --i;
+                        continue;
+                    }
+                    ImGui.PopID();
+                }
+
+                if (first || last) ImGui.BeginDisabled();
+                ImGui.PushID($"Time {i}");
+                if (ImGui.SliderDouble("Time", ref tsubn, first ? 0.0 : controlPoints[i - 1].Time, last ? 1.0 : controlPoints[i + 1].Time))
+                {
+                    controlPoints[i].Time = tsubn;
+                    pointsDirty = true;
+                }
+                ImGui.PopID();
+                if (first || last) ImGui.EndDisabled();
+
+                ImGui.PushID($"Intensity {i}");
+                if (ImGui.SliderDouble("Intensity", ref isubn, 0, 1))
+                {
+                    controlPoints[i].Intensity = isubn;
+                    pointsDirty = true;
+                }
+                ImGui.PopID();
+
+                ImGui.EndGroup();
+                ImGui.Unindent();
+            }
+
+            if (pointsDirty)
+            {
+                pattern.ControlPoints = new ControlPoint[controlPoints.Length];
+                for (int i = 0; i < controlPoints.Length; ++i) pattern.ControlPoints[i] = new ControlPoint(controlPoints[i]);
+            }
+        }
+
+        public PatternConfig GetDefaultConfiguration()
+        {
+            return UserCurvePattern.GetDefaultConfiguration();
+        }
+
+    }
+
     internal class UserCurvePattern : IPattern
     {
         public DateTime Begins { get; set; }
