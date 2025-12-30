@@ -1,4 +1,49 @@
 # Change Log
+<a name="1.2.0-beta.3"></a>
+## [1.2.0-beta.3](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.2.0-beta.3) (2025-12-22)
+
+### Other
+
+* add release step to adjust prerelease versions into dalamud-friendly format ([1248ef1](https://www.github.com/emesinae/AetherSenseRedux/commit/1248ef16d7cf6a4f74e947e6ba9e0b809682fb5a))
+
+<a name="1.2.0-beta.2"></a>
+## [1.2.0-beta.2](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.2.0-beta.2) (2025-12-21)
+
+### Other
+
+* fix missing save command for repo json ([8c8c8d6](https://www.github.com/emesinae/AetherSenseRedux/commit/8c8c8d6fa600c191afe080206d52c088caf7622c))
+
+<a name="1.2.0-beta.1"></a>
+## [1.2.0-beta.1](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.2.0-beta.1) (2025-12-21)
+
+<a name="1.2.0-beta.0"></a>
+## [1.2.0-beta.0](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.2.0-beta.0) (2025-12-21)
+
+### 🌱 Features
+
+* Add a pattern preview plot ([#28](https://www.github.com/emesinae/AetherSenseRedux/issues/28)) ([4ad4a0a](https://www.github.com/emesinae/AetherSenseRedux/commit/4ad4a0a925ee3f6ac6e0e0eddeb31a2c4773e260))
+
+### 🐛 Bug Fixes
+
+* **pattern:** use relative times for calculating Square Pattern intensity ([#33](https://www.github.com/emesinae/AetherSenseRedux/issues/33)) ([249f7aa](https://www.github.com/emesinae/AetherSenseRedux/commit/249f7aaad6e6c10ac121e2d981f0d1f3675e890b))
+
+### Other
+
+* Add various combination modes (#26) ([82c799e](https://www.github.com/emesinae/AetherSenseRedux/commit/82c799e72151d417824b331a881250122dabdfbf))
+* set `prerelease` value on the actual release ([ee3dfb3](https://www.github.com/emesinae/AetherSenseRedux/commit/ee3dfb32ce466ad093183e66d56e61bd5a482439))
+* update workflows to allow for testing/pre-release builds ([0b69fbb](https://www.github.com/emesinae/AetherSenseRedux/commit/0b69fbb693b66a1f5845a701513b55f604898853))
+
+<a name="1.1.6"></a>
+## [1.1.6](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.1.6) (2025-12-20)
+
+### Other
+
+* discover pattern implementations at runtime ([#29](https://www.github.com/emesinae/AetherSenseRedux/issues/29)) ([a71bd05](https://www.github.com/emesinae/AetherSenseRedux/commit/a71bd05b4e8b5ea288e90abf7a3443d62fae8655))
+* manually fix broken download url ([52cef2c](https://www.github.com/emesinae/AetherSenseRedux/commit/52cef2c8d356389f386eddf59133f0ebddae1045))
+* **actions:** refactor workflow to try to include release commit in the Release itself ([9d17f42](https://www.github.com/emesinae/AetherSenseRedux/commit/9d17f42a893e348f0347186e4b582968557d0083))
+* **actions:** update workflows to use dotnet 10 ([#32](https://www.github.com/emesinae/AetherSenseRedux/issues/32)) ([a5cf52e](https://www.github.com/emesinae/AetherSenseRedux/commit/a5cf52e36c994abec02448db36a10d4a38a5b45a))
+* **release:** 1.1.5 ([622756f](https://www.github.com/emesinae/AetherSenseRedux/commit/622756fd1e5dd433beb55b7bed85220e753f6600))
+
 <a name="1.1.5"></a>
 ## [1.1.5](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.1.5) (2025-12-20)
 

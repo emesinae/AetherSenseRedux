@@ -3,7 +3,7 @@
     "Author": "Tama Gotchi (digital-pet), Emesinae",
     "Name": "AetherSense Redux (18+)",
     "InternalName": "AetherSenseRedux",
-    "AssemblyVersion": "1.1.5.0",
+    "AssemblyVersion": "1.1.6.0",
     "Description": "Buttplugs on the moon",
     "ApplicableVersion": "any",
     "RepoUrl": "https://github.com/emesinae/AetherSenseRedux",
@@ -20,7 +20,10 @@
     "LoadPriority": 0,
     "Punchline": "Advanced haptic feedback using Intiface",
     "AcceptsFeedback": true,
-    "DownloadLinkInstall": "https://github.com/emesinae/AetherSenseRedux/releases/download/v1.1.5/AetherSenseRedux.zip",
-    "DownloadLinkUpdate": "https://github.com/emesinae/AetherSenseRedux/releases/download/v1.1.5/AetherSenseRedux.zip"
+    "DownloadLinkInstall": "https://github.com/emesinae/AetherSenseRedux/releases/download/v1.1.6/AetherSenseRedux.zip",
+    "DownloadLinkUpdate": "https://github.com/emesinae/AetherSenseRedux/releases/download/v1.1.6/AetherSenseRedux.zip",
+    "DownloadLinkTesting": "https://github.com/emesinae/AetherSenseRedux/releases/download/v1.2.0-beta.3/AetherSenseRedux.zip",
+    "TestingAssemblyVersion": "1.2.0.1003",
+    "TestingDalamudApiLevel": 14
   }
 ]

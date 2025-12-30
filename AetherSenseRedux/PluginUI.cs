@@ -12,6 +12,7 @@ using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.Utility.Raii;
 using XIVChatTypes;
+using Dalamud.Bindings.ImPlot;
 
 namespace AetherSenseRedux
 {
@@ -93,7 +94,7 @@ namespace AetherSenseRedux
             ////
             ////    SETTINGS WINDOW
             ////
-            ImGui.SetNextWindowSize(new Vector2(640, 400), ImGuiCond.Appearing);
+            ImGui.SetNextWindowSize(new Vector2(640, 500), ImGuiCond.Appearing);
             if (ImGui.Begin("AetherSense Redux", ref _settingsVisible, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.MenuBar))
             {
 
@@ -270,6 +271,21 @@ namespace AetherSenseRedux
                         {
                             _workingCopy.LoadDefaults();
                         }
+
+                        if (ImGui.BeginCombo("Combine Mode", _workingCopy.Combiner.ToString()))
+                        {
+                            foreach (Configuration.CombineMode mode in Enum.GetValues(typeof(Configuration.CombineMode)))
+                            {
+                                if (ImGui.Selectable(mode.ToString(), mode == _workingCopy.Combiner))
+                                {
+                                    _workingCopy.Combiner = mode;
+                                }
+
+                                if (mode == _workingCopy.Combiner) ImGui.SetItemDefaultFocus();
+                            }
+                            ImGui.EndCombo();
+                        }
+
                         ImGui.EndTabItem();
                     }
                     ImGui.EndTabBar();
@@ -726,6 +742,40 @@ namespace AetherSenseRedux
                     ImGui.SetTooltip("Preview pattern on all devices.");
                 }
                 //end test button
+
+                // begin preview plot
+                try
+                {
+                    IPattern pattern = PatternFactory.GetPatternFromObject(t.PatternSettings);
+
+                    float[] values = new float[t.PatternSettings.Duration];
+                    for (int i = 0; i < t.PatternSettings.Duration; ++i)
+                    {
+                        values[i] = (float)pattern.GetIntensityAtTime(pattern.Expires - TimeSpan.FromMilliseconds(t.PatternSettings.Duration - i));
+                    }
+                    ImPlot.PushStyleVar(ImPlotStyleVar.FitPadding, new Vector2(0.3f, 0.3f));
+                    if (ImPlot.BeginPlot("Preview", new Vector2(-1, 128)))
+                    {
+                        ImPlot.SetupAxis(ImAxis.X1, "Time", ImPlotAxisFlags.Lock | ImPlotAxisFlags.NoLabel);
+                        ImPlot.SetupAxisLimits(ImAxis.X1, 0, t.PatternSettings.Duration, ImPlotCond.Always);
+                        ImPlot.SetupAxis(ImAxis.Y1, "Intensity", ImPlotAxisFlags.Lock | ImPlotAxisFlags.NoLabel | ImPlotAxisFlags.NoTickLabels);
+                        ImPlot.SetupAxisLimits(ImAxis.Y1, 0, 1, ImPlotCond.Always);
+                        unsafe
+                        {
+                            fixed (float* valuesPtr = values)
+                            {
+                                ImPlot.PlotShaded("", valuesPtr, values.Length, 0.0);
+                            }
+                        }
+                        ImPlot.EndPlot();
+                    }
+                    ImPlot.PopStyleVar();
+                }
+                catch (Exception e)
+                {
+                    ImGui.Text("Unable to preview: " + e.Message);
+                }
+                // end preview plot
 
                 ImGui.Indent();
 
