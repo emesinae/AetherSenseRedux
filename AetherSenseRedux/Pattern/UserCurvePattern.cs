@@ -149,34 +149,27 @@ namespace AetherSenseRedux.Pattern
 
         private readonly Coefficients[] Coeffs; // TODO I should probably structure this.
 
-        private static double Quadratic(double v0, double m0, double v1, double m1)
+        protected static Coefficients CalculateCoefficients(ControlPoint p0, ControlPoint p1, ControlPoint p2, ControlPoint p3, double Tension)
         {
-            return -3 * v0 + 3 * v1 - 2 * m0 - m1;
-        }
+            // This is based off of Charles Petzold's Canonical Splines implementation
+            // https://charlespetzold.com/blog/2009/01/Canonical-Splines-in-WPF-and-Silverlight.html
+            double slope1 = (1 - Tension) * (p2.Intensity - p0.Intensity);
+            double slope2 = (1 - Tension) * (p3.Intensity - p1.Intensity);
 
-        private static double Cubic(double v0, double m0, double v1, double m1)
-        {
-            return 2 * v0 + m0 - 2 * v1 + m1;
-        }
+            // Coefficients in `a*t^3 + b*t^2 + c*t + d`
+            double a = slope1 + slope2 + 2 * p1.Intensity - 2 * p2.Intensity;
+            double b = -2 * slope1 - slope2 - 3 * p1.Intensity + 3 * p2.Intensity;
+            double c = slope1;
+            double d = p1.Intensity;
 
-        private static double Slope(ControlPoint[] points, int i)
-        {
-            if (i < 0 || i > points.Length - 1)
+            return new Coefficients()
             {
-                throw new IndexOutOfRangeException();
-            }
-            if (i == 0)
-            {
-                return (points[1].Intensity - points[0].Intensity) / points[1].Time;
-            }
-            else if (i == points.Length - 1)
-            {
-                return (points[i].Intensity - points[i - 1].Intensity) / (1.0 - points[i - 1].Time);
-            }
-            else
-            {
-                return (points[i + 1].Intensity - points[i - 1].Intensity) / (points[i + 1].Time - points[i - 1].Time);
-            }
+                Time = p1.Time,
+                Constant = d,
+                Linear = c,
+                Quadratic = b,
+                Cubic = a,
+            };
         }
 
         public UserCurvePattern(UserCurvePatternConfig config)
@@ -232,19 +225,19 @@ namespace AetherSenseRedux.Pattern
                 Coeffs = new Coefficients[n];
                 for (int i = 0; i < n; ++i)
                 {
-                    double v0 = config.ControlPoints[i].Intensity;
-                    double m0 = curveSlopes[i];
-                    double v1 = config.ControlPoints[i + 1].Intensity;
-                    double m1 = curveSlopes[i + 1];
-
-                    Coeffs[i] = new Coefficients
+                    if (i == 0)
                     {
-                        Time = config.ControlPoints[i].Time,
-                        Constant = v0,
-                        Linear = m0,
-                        Quadratic = Quadratic(v0, m0, v1, m1),
-                        Cubic = Cubic(v0, m0, v1, m1)
-                    };
+                        Coeffs[i] = CalculateCoefficients(config.ControlPoints[0], config.ControlPoints[0],
+                            config.ControlPoints[1], config.ControlPoints[2], config.Tension);
+                    }
+                    else if (i == n - 1)
+                    {
+                        Coeffs[i] = CalculateCoefficients(config.ControlPoints[i - 1], config.ControlPoints[i], config.ControlPoints[i + 1], config.ControlPoints[i + 1], config.Tension);
+                    }
+                    else
+                    {
+                        Coeffs[i] = CalculateCoefficients(config.ControlPoints[i - 1], config.ControlPoints[i], config.ControlPoints[i + 1], config.ControlPoints[i + 2], config.Tension);
+                    }
                 }
             }
         }
