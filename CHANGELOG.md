@@ -1,4 +1,11 @@
 # Change Log
+<a name="1.2.0-beta.4"></a>
+## [1.2.0-beta.4](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.2.0-beta.4) (2026-01-12)
+
+### 🌱 Features
+
+* **patterns:** Add UserCurvePattern ([#27](https://www.github.com/emesinae/AetherSenseRedux/issues/27)) ([f999093](https://www.github.com/emesinae/AetherSenseRedux/commit/f9990932d785f2cb35613aa0c559541201f27946))
+
 <a name="1.2.0-beta.3"></a>
 ## [1.2.0-beta.3](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.2.0-beta.3) (2025-12-22)
 
