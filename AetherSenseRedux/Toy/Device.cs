@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AetherSenseRedux.Pattern;
 using Buttplug.Client;
 using System.Threading;
+using Dalamud.Utility;
 
 namespace AetherSenseRedux.Toy
 {
@@ -21,10 +22,18 @@ namespace AetherSenseRedux.Toy
 
         private double _ups = 16;       // we initialize this to the target time per update value just to avoid confusing users
         private double _lastIntensity;
+
+        /// <summary>
+        /// The time when we last sent a message to this device.
+        /// </summary>
+        private DateTime _lastWriteTime;
         private bool _active;
         private const int FrameTime = 16; // The target time per update, in this case 16ms = ~60 ups, and also a pipe dream for BLE toys.
         private readonly WaitType _waitType;
         private readonly Configuration configuration;
+
+        public delegate void ErrorDelegate(Device device, Exception ex);
+        public event ErrorDelegate? DeviceWriteError;
 
         public DeviceStatus Status =>
             new()
@@ -125,6 +134,20 @@ namespace AetherSenseRedux.Toy
             Write(0).Wait();
         }
 
+        // <summary>
+        /// 
+        /// </summary>
+        public async Task StopAsync()
+        {
+            _active = false;
+            lock (Patterns)
+            {
+                Patterns.Clear();
+            }
+
+            await Write(0).ConfigureAwait(false);
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -134,7 +157,6 @@ namespace AetherSenseRedux.Toy
             List<double> intensities = new();
             DateTime t = DateTime.UtcNow;
             var patternsToRemove = new List<IPattern>();
-
             lock (Patterns)
             {
                 foreach (var pattern in Patterns)
@@ -159,7 +181,7 @@ namespace AetherSenseRedux.Toy
 
             double intensity = 0;
 
-            if (intensities.Any())
+            if (intensities.Count > 0)
             {
                 switch (configuration.Combiner)
                 {
@@ -180,7 +202,6 @@ namespace AetherSenseRedux.Toy
                         break;
                 }
             }
-
             await Write(intensity);
         }
 
@@ -190,25 +211,52 @@ namespace AetherSenseRedux.Toy
         /// <param name="intensity"></param>
         private async Task Write(double intensity)
         {
-            // clamp intensity before comparing to reduce unnecessary writes to device
-            double clampedIntensity = Clamp(intensity, 0, 1);
-
-            if (Math.Abs(_lastIntensity - clampedIntensity) < 0.00001)
+            // Skip messages if it has been less than the MinMessageGap
+            // This is to avoid filling up the device message queue,
+            // which can cause the devices to run longer than expected.
+            var timeSinceLastWrite = DateTime.Now - this._lastWriteTime;
+            var lastWriteMs = timeSinceLastWrite.TotalMilliseconds;
+            var timingCap = Math.Max(ClientDevice.MessageTimingGap, configuration.MinMessageGap);
+            if (lastWriteMs < timingCap)
             {
                 return;
             }
 
-            _lastIntensity = clampedIntensity;
+            // clamp intensity before comparing to reduce unnecessary writes to device
+            double clampedIntensity = Clamp(intensity, 0, 1);
+
+            // If the intensity has not changed since the last write,
+            // then we can (probably) skip sending the message.
+            if (Math.Abs(_lastIntensity - clampedIntensity) < 0.00001)
+            {
+                // However, it seems like the C# Websocket Client isn't keeping the sockets open
+                // Or maybe it's a Buttplug.io issue. 
+                // Either way, after ~20 seconds of nothing happening, the client disconnects. 
+                // So every 15 seconds we'll let this send an intensity update message.
+                // In practice, this will probably be sending zeros most of the time. 
+                // But it could be different if someone decides to use a REALLY long constant pattern.
+                if (timeSinceLastWrite.TotalSeconds >= 15)
+                {
+                    Service.PluginLog.Verbose($"Sending keep alive message of {clampedIntensity} intensity.");
+                }
+                else
+                {
+                    return;
+                }
+            }
 
             try
             {
-                await ClientDevice.VibrateAsync(clampedIntensity);
+                this._lastIntensity = clampedIntensity;
+                this._lastWriteTime = DateTime.Now;
+                await ClientDevice.VibrateAsync(clampedIntensity).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 Service.PluginLog.Warning($"Error while trying to send vibration value to device '{this.Name}': {ex.Message}.");
                 // Connecting to an intiface server on Linux will spam the log with bluez errors
                 // so we just ignore all exceptions from this statement. Good? Probably not. Necessary? Yes.
+                this.DeviceWriteError?.Invoke(this, ex);
             }
 
         }

@@ -286,6 +286,33 @@ namespace AetherSenseRedux
                             ImGui.EndCombo();
                         }
 
+                        if (ImGui.CollapsingHeader("Advanced (Ultimate)"))
+                        {
+                            ImGui.TextWrapped("These are the (even more) advanced settings. You probably don't need to change these.");
+                            var minMessageGap = (int)_workingCopy.MinMessageGap;
+
+                            ImGui.PushItemWidth(ImGui.GetContentRegionAvail().X * 0.4f);
+                            if (ImGui.DragInt("Min Message Delay (ms)", ref minMessageGap, 1, 0, 100))
+                            {
+                                _workingCopy.MinMessageGap = minMessageGap;
+                            }
+
+                            ImGui.SameLine();
+                            ImGui.TextDisabled("(?)");
+                            if (ImGui.IsItemHovered())
+                            {
+                                using (ImRaii.Tooltip())
+                                {
+                                    ImGui.Text("The minimum delay between messages");
+                                    ImGui.Text("sent to a device, in milliseconds.");
+                                    ImGui.Text("If devices seem to still be running");
+                                    ImGui.Text("after ASR shows the intensity as zero,");
+                                    ImGui.Text("then you might need to increase this.");
+                                    ImGui.TextDisabled("Default: 30");
+                                }
+                            }
+                        }
+
                         ImGui.EndTabItem();
                     }
                     ImGui.EndTabBar();
