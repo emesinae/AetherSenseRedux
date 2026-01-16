@@ -202,7 +202,7 @@ namespace AetherSenseRedux.Toy
                         break;
                 }
             }
-            await Write(intensity).ConfigureAwait(false);
+            await Write(intensity);
         }
 
         /// <summary>
