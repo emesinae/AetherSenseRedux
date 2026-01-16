@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using AetherSenseRedux.Pattern;
 using Buttplug.Client;
-using Dalamud.Utility;
 
 namespace AetherSenseRedux.Toy;
 
@@ -137,7 +136,7 @@ internal class DeviceService : IDisposable, IAsyncDisposable
             {
                 Service.PluginLog.Error(ex, "Buttplug failed to connect.");
                 LastException = ex;
-                Stop();
+                await StopAsync();
             }
         }
 
@@ -245,6 +244,7 @@ internal class DeviceService : IDisposable, IAsyncDisposable
 
             try
             {
+                _buttplug.ServerDisconnect -= OnServerDisconnect;
                 await _buttplug!.DisconnectAsync();
                 Service.PluginLog.Information("Buttplug disconnected.");
             }
@@ -286,18 +286,7 @@ internal class DeviceService : IDisposable, IAsyncDisposable
 
     private void CleanButtplug()
     {
-        var cleanTask = CleanButtplugAsync();
-        try
-        {
-            // we can't use WaitSafely inside async operations
-            // so for (hacky) ease, we'll try it,
-            // and then use Wait() if this throws.
-            cleanTask.WaitSafely();
-        }
-        catch (InvalidOperationException)
-        {
-            cleanTask.Wait();
-        }
+        CleanButtplugAsync().Wait();
     }
 
     /// <summary>
@@ -315,6 +304,26 @@ internal class DeviceService : IDisposable, IAsyncDisposable
             }
             _devicePool.Clear();
         }
+        Service.PluginLog.Debug("Devices destroyed.");
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    private async Task CleanDevicesAsync()
+    {
+        var stopTasks = new List<Task>();
+        lock (_devicePool)
+        {
+            foreach (var device in _devicePool)
+            {
+                Service.PluginLog.Debug("Stopping device {0}", device.Name);
+                var stop = device.StopAsync().ContinueWith((task => device.Dispose()));
+                stopTasks.Add(stop);
+            }
+            _devicePool.Clear();
+        }
+        await Task.WhenAll(stopTasks);
         Service.PluginLog.Debug("Devices destroyed.");
     }
 
@@ -381,7 +390,7 @@ internal class DeviceService : IDisposable, IAsyncDisposable
             return;
         }
 
-        Stop();
+        StopAsync().Wait();
         Service.PluginLog.Error("Unexpected disconnect.");
     }
 
@@ -390,6 +399,13 @@ internal class DeviceService : IDisposable, IAsyncDisposable
         this.Stopped?.Invoke(this, EventArgs.Empty);
         CleanDevices();
         CleanButtplug();
+    }
+
+    public async Task StopAsync()
+    {
+        this.Stopped?.Invoke(this, EventArgs.Empty);
+        await CleanDevicesAsync();
+        await CleanButtplugAsync();
     }
 
     /// <summary>

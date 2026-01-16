@@ -131,7 +131,21 @@ namespace AetherSenseRedux.Toy
                 Patterns.Clear();
             }
 
-            Write(0).WaitSafely();
+            Write(0).Wait();
+        }
+
+        // <summary>
+        /// 
+        /// </summary>
+        public async Task StopAsync()
+        {
+            _active = false;
+            lock (Patterns)
+            {
+                Patterns.Clear();
+            }
+
+            await Write(0).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -197,22 +211,38 @@ namespace AetherSenseRedux.Toy
         /// <param name="intensity"></param>
         private async Task Write(double intensity)
         {
-            // clamp intensity before comparing to reduce unnecessary writes to device
-            double clampedIntensity = Clamp(intensity, 0, 1);
-
-            if (Math.Abs(_lastIntensity - clampedIntensity) < 0.00001)
-            {
-                return;
-            }
-
             // Skip messages if it has been less than the MinMessageGap
             // This is to avoid filling up the device message queue,
             // which can cause the devices to run longer than expected.
-            var lastWriteMs = (DateTime.Now - this._lastWriteTime).TotalMilliseconds;
+            var timeSinceLastWrite = DateTime.Now - this._lastWriteTime;
+            var lastWriteMs = timeSinceLastWrite.TotalMilliseconds;
             var timingCap = Math.Max(ClientDevice.MessageTimingGap, configuration.MinMessageGap);
             if (lastWriteMs < timingCap)
             {
                 return;
+            }
+
+            // clamp intensity before comparing to reduce unnecessary writes to device
+            double clampedIntensity = Clamp(intensity, 0, 1);
+
+            // If the intensity has not changed since the last write,
+            // then we can (probably) skip sending the message.
+            if (Math.Abs(_lastIntensity - clampedIntensity) < 0.00001)
+            {
+                // However, it seems like the C# Websocket Client isn't keeping the sockets open
+                // Or maybe it's a Buttplug.io issue. 
+                // Either way, after ~20 seconds of nothing happening, the client disconnects. 
+                // So every 15 seconds we'll let this send an intensity update message.
+                // In practice, this will probably be sending zeros most of the time. 
+                // But it could be different if someone decides to use a REALLY long constant pattern.
+                if (timeSinceLastWrite.TotalSeconds >= 15)
+                {
+                    Service.PluginLog.Verbose($"Sending keep alive message of {clampedIntensity} intensity.");
+                }
+                else
+                {
+                    return;
+                }
             }
 
             try
