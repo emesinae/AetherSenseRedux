@@ -25,6 +25,10 @@ namespace AetherSenseRedux
         public string Address { get; set; } = "ws://127.0.0.1:12345";
         public List<string> SeenDevices { get; set; } = new();
         public List<dynamic> Triggers { get; set; } = new List<dynamic>();
+        /// <summary>
+        /// The minimum gap between messages sent to devices, in milliseconds.
+        /// </summary>
+        public double MinMessageGap { get; set; } = 30;
 
         /// <summary>
         /// Deep copies the trigger list while ensuring that everything has the correct type.
@@ -51,6 +55,7 @@ namespace AetherSenseRedux
         {
             Version = 2;
             FirstRun = false;
+            MinMessageGap = 30;
             Triggers = new List<dynamic>() {
                 new ChatTriggerConfig()
                 {
@@ -103,6 +108,7 @@ namespace AetherSenseRedux
                 }
                 FirstRun = o.FirstRun;
                 LogChat = o.LogChat;
+                MinMessageGap = o.MinMessageGap ?? 30;
                 try
                 {
                     Combiner = o.Combiner;

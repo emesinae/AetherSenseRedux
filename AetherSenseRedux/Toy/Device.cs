@@ -205,19 +205,19 @@ namespace AetherSenseRedux.Toy
                 return;
             }
 
+            // Skip messages if it has been less than the MinMessageGap
+            // This is to avoid filling up the device message queue,
+            // which can cause the devices to run longer than expected.
             var lastWriteMs = (DateTime.Now - this._lastWriteTime).TotalMilliseconds;
-            var timingCap = Math.Max(ClientDevice.MessageTimingGap, 30);
+            var timingCap = Math.Max(ClientDevice.MessageTimingGap, configuration.MinMessageGap);
             if (lastWriteMs < timingCap)
             {
                 return;
             }
 
-            //Service.PluginLog.Info($"writing {clampedIntensity}: {lastWriteMs} >= {timingCap} - {ClientDevice.Name}");
-
-            _lastIntensity = clampedIntensity;
-
             try
             {
+                this._lastIntensity = clampedIntensity;
                 this._lastWriteTime = DateTime.Now;
                 await ClientDevice.VibrateAsync(clampedIntensity).ConfigureAwait(false);
             }
