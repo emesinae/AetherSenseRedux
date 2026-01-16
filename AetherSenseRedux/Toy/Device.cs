@@ -181,7 +181,7 @@ namespace AetherSenseRedux.Toy
 
             double intensity = 0;
 
-            if (intensities.Any())
+            if (intensities.Count > 0)
             {
                 switch (configuration.Combiner)
                 {
