@@ -1,4 +1,11 @@
 # Change Log
+<a name="1.2.0-beta.5"></a>
+## [1.2.0-beta.5](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.2.0-beta.5) (2026-01-16)
+
+### 🐛 Bug Fixes
+
+* **devices:** fix devices running long and/or disconnecting ([#34](https://www.github.com/emesinae/AetherSenseRedux/issues/34)) ([ce5ef90](https://www.github.com/emesinae/AetherSenseRedux/commit/ce5ef908c8bea31af3d4d0e61da8cc92135c6fe2))
+
 <a name="1.2.0-beta.4"></a>
 ## [1.2.0-beta.4](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.2.0-beta.4) (2026-01-12)
 
