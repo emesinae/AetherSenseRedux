@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AetherSenseRedux.Pattern;
 using Buttplug.Client;
 using System.Threading;
+using Dalamud.Utility;
 
 namespace AetherSenseRedux.Toy
 {
@@ -21,10 +22,18 @@ namespace AetherSenseRedux.Toy
 
         private double _ups = 16;       // we initialize this to the target time per update value just to avoid confusing users
         private double _lastIntensity;
+
+        /// <summary>
+        /// The time when we last sent a message to this device.
+        /// </summary>
+        private DateTime _lastWriteTime;
         private bool _active;
         private const int FrameTime = 16; // The target time per update, in this case 16ms = ~60 ups, and also a pipe dream for BLE toys.
         private readonly WaitType _waitType;
         private readonly Configuration configuration;
+
+        public delegate void ErrorDelegate(Device device, Exception ex);
+        public event ErrorDelegate? DeviceWriteError;
 
         public DeviceStatus Status =>
             new()
@@ -122,7 +131,7 @@ namespace AetherSenseRedux.Toy
                 Patterns.Clear();
             }
 
-            Write(0).Wait();
+            Write(0).WaitSafely();
         }
 
         /// <summary>
@@ -134,7 +143,6 @@ namespace AetherSenseRedux.Toy
             List<double> intensities = new();
             DateTime t = DateTime.UtcNow;
             var patternsToRemove = new List<IPattern>();
-
             lock (Patterns)
             {
                 foreach (var pattern in Patterns)
@@ -180,8 +188,7 @@ namespace AetherSenseRedux.Toy
                         break;
                 }
             }
-
-            await Write(intensity);
+            await Write(intensity).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -198,17 +205,28 @@ namespace AetherSenseRedux.Toy
                 return;
             }
 
+            var lastWriteMs = (DateTime.Now - this._lastWriteTime).TotalMilliseconds;
+            var timingCap = Math.Max(ClientDevice.MessageTimingGap, 30);
+            if (lastWriteMs < timingCap)
+            {
+                return;
+            }
+
+            //Service.PluginLog.Info($"writing {clampedIntensity}: {lastWriteMs} >= {timingCap} - {ClientDevice.Name}");
+
             _lastIntensity = clampedIntensity;
 
             try
             {
-                await ClientDevice.VibrateAsync(clampedIntensity);
+                this._lastWriteTime = DateTime.Now;
+                await ClientDevice.VibrateAsync(clampedIntensity).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 Service.PluginLog.Warning($"Error while trying to send vibration value to device '{this.Name}': {ex.Message}.");
                 // Connecting to an intiface server on Linux will spam the log with bluez errors
                 // so we just ignore all exceptions from this statement. Good? Probably not. Necessary? Yes.
+                this.DeviceWriteError?.Invoke(this, ex);
             }
 
         }

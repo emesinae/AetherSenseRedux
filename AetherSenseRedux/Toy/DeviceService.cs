@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AetherSenseRedux.Pattern;
 using Buttplug.Client;
+using Dalamud.Utility;
 
 namespace AetherSenseRedux.Toy;
 
@@ -24,6 +25,7 @@ internal class DeviceService : IDisposable, IAsyncDisposable
     private ButtplugClient? _buttplug;
     private ButtplugWebsocketConnector? _buttplugWebsocketConnector;
     private ButtplugStatus _status;
+    private CancellationTokenSource? _cancellationTokenSource = null;
     public bool Connected => _buttplug?.Connected ?? false;
     public Exception? LastException { get; set; }
     private readonly Configuration configuration;
@@ -126,9 +128,10 @@ internal class DeviceService : IDisposable, IAsyncDisposable
         {
             try
             {
+                _cancellationTokenSource = new CancellationTokenSource();
                 _buttplugWebsocketConnector = new ButtplugWebsocketConnector(address);
-                await _buttplug.ConnectAsync(_buttplugWebsocketConnector);
-                _ = DoScan();
+                await _buttplug.ConnectAsync(_buttplugWebsocketConnector, _cancellationTokenSource.Token);
+                await DoScan();
             }
             catch (Exception ex)
             {
@@ -214,6 +217,11 @@ internal class DeviceService : IDisposable, IAsyncDisposable
         {
             try
             {
+                if (_cancellationTokenSource != null)
+                {
+                    await _cancellationTokenSource.CancelAsync();
+                }
+
                 if (_buttplugWebsocketConnector?.Connected ?? false)
                 {
                     Service.PluginLog.Debug("Websocket is still connected. Disconnecting...");
@@ -224,7 +232,15 @@ internal class DeviceService : IDisposable, IAsyncDisposable
             }
             catch (Exception ex)
             {
-                Service.PluginLog.Error(ex, "Failed to disconnect Buttplug websocket.");
+                if (ex is OperationCanceledException && ex.InnerException is ObjectDisposedException)
+                {
+                    Service.PluginLog.Warning(ex, "Buttplug websocket appears to have already disconnected");
+                    _buttplugWebsocketConnector = null;
+                }
+                else
+                {
+                    Service.PluginLog.Error(ex, "Failed to disconnect Buttplug websocket.");
+                }
             }
 
             try
@@ -270,7 +286,18 @@ internal class DeviceService : IDisposable, IAsyncDisposable
 
     private void CleanButtplug()
     {
-        CleanButtplugAsync().Wait();
+        var cleanTask = CleanButtplugAsync();
+        try
+        {
+            // we can't use WaitSafely inside async operations
+            // so for (hacky) ease, we'll try it,
+            // and then use Wait() if this throws.
+            cleanTask.WaitSafely();
+        }
+        catch (InvalidOperationException)
+        {
+            cleanTask.Wait();
+        }
     }
 
     /// <summary>
@@ -301,6 +328,7 @@ internal class DeviceService : IDisposable, IAsyncDisposable
 
         Service.PluginLog.Information("Device {0} added", e.Device.Name);
         Device newDevice = new(this.configuration, e.Device, WaitType);
+        newDevice.DeviceWriteError += OnDeviceWriteError;
         lock (this._devicePool)
         {
             this._devicePool.Add(newDevice);
@@ -308,6 +336,12 @@ internal class DeviceService : IDisposable, IAsyncDisposable
         this.DeviceAdded?.Invoke(newDevice);
 
         newDevice.Start();
+    }
+
+    private void OnDeviceWriteError(Device device, Exception ex)
+    {
+        Service.PluginLog.Warning(ex, $"Device {device.Name} write error: {ex.Message}");
+        this.RemoveClientDevice(device.ClientDevice);
     }
 
     /// <summary>
