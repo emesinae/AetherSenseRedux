@@ -1,10 +1,6 @@
 ﻿using AetherSenseRedux.Pattern;
-using Dalamud.Game.Text;
-using Dalamud.Game.Text.SeStringHandling;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.Collections.Concurrent;
@@ -36,7 +32,6 @@ namespace AetherSenseRedux.Trigger
         /// Instantiates a new ChatTrigger.
         /// </summary>
         /// <param name="configuration">The configuration object for this trigger.</param>
-        /// <param name="devices">A reference to the list of Buttplug Devices.</param>
         /// <returns>A ChatTrigger object.</returns>
         public ChatTrigger(ChatTriggerConfig configuration)
         {
@@ -104,7 +99,7 @@ namespace AetherSenseRedux.Trigger
         /// </summary>
         public void Start()
         {
-            Task.Run(MainLoop).ConfigureAwait(false); ;
+            Task.Run(MainLoop).ConfigureAwait(false);
         }
 
         /// <summary>
