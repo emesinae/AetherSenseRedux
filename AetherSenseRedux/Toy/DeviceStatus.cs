@@ -8,4 +8,6 @@ public class DeviceStatus
     public double UPS { get; init; }
 
     public double LastIntensity { get; init; }
+
+    public string? OutputType { get; init; }
 }
