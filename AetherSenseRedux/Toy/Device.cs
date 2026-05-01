@@ -249,7 +249,7 @@ namespace AetherSenseRedux.Toy
             {
                 this._lastIntensity = clampedIntensity;
                 this._lastWriteTime = DateTime.Now;
-                await ClientDevice.VibrateAsync(clampedIntensity).ConfigureAwait(false);
+                await ClientDevice.RunOutputAsync(DeviceOutput.Vibrate.Percent(clampedIntensity)).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
