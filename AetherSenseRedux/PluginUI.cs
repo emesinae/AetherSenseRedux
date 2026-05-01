@@ -168,7 +168,13 @@ namespace AetherSenseRedux
                         }
                         ImGui.Text("Connection Status:");
                         ImGui.Indent();
-                        ImGui.Text(Service.Plugin.DeviceService.Status == ButtplugStatus.Connected ? "Connected" : Service.Plugin.DeviceService.Status == ButtplugStatus.Connecting ? "Connecting..." : Service.Plugin.DeviceService.Status == ButtplugStatus.Error ? "Error" : "Disconnected");
+                        ImGui.Text(Service.Plugin.DeviceService.Status switch
+                        {
+                            ButtplugStatus.Connected => "Connected",
+                            ButtplugStatus.Connecting => "Connecting...",
+                            ButtplugStatus.Error => "Error",
+                            _ => "Disconnected"
+                        });
                         if (Service.Plugin.DeviceService.LastException != null)
                         {
                             ImGui.Text(Service.Plugin.DeviceService.LastException.Message);
@@ -180,7 +186,7 @@ namespace AetherSenseRedux
                             ImGui.Indent();
                             foreach (var device in Service.Plugin.DeviceService.ConnectedDevices)
                             {
-                                ImGui.Text($"{device.Key} - {(int)(device.Value.LastIntensity * 100)}% [{(int)device.Value.UPS}]");
+                                ImGui.Text($"{device.Key} - {device.Value.OutputType} - {(int)(device.Value.LastIntensity * 100)}% [{(int)device.Value.UPS}]");
                             }
                             ImGui.Unindent();
                         }
@@ -301,15 +307,13 @@ namespace AetherSenseRedux
                             ImGui.TextDisabled("(?)");
                             if (ImGui.IsItemHovered())
                             {
-                                using (ImRaii.Tooltip())
-                                {
-                                    ImGui.Text("The minimum delay between messages");
-                                    ImGui.Text("sent to a device, in milliseconds.");
-                                    ImGui.Text("If devices seem to still be running");
-                                    ImGui.Text("after ASR shows the intensity as zero,");
-                                    ImGui.Text("then you might need to increase this.");
-                                    ImGui.TextDisabled("Default: 30");
-                                }
+                                using var tooltip = ImRaii.Tooltip();
+                                ImGui.Text("The minimum delay between messages");
+                                ImGui.Text("sent to a device, in milliseconds.");
+                                ImGui.Text("If devices seem to still be running");
+                                ImGui.Text("after ASR shows the intensity as zero,");
+                                ImGui.Text("then you might need to increase this.");
+                                ImGui.TextDisabled("Default: 30");
                             }
                         }
 
@@ -508,16 +512,13 @@ namespace AetherSenseRedux
                         ImGui.Bullet();
                         ImGui.TextUnformatted(selectedEmote?.Name.ExtractText() ?? selectedEmote?.TextCommand.ValueNullable?.Command.ExtractText() ?? (emoteId > 0 ? $"ID {emoteId}" : null) ?? "Missing data");
                         ImGui.SameLine();
-                        using (ImRaii.PushFont(UiBuilder.IconFont))
+
+                        using var font = ImRaii.PushFont(UiBuilder.IconFont);
+                        using var idDisposable = ImRaii.PushId(emoteId);
+                        // You have no idea how much I want to somehow create an alias named `SmolButton`.
+                        if (ImGui.SmallButton(FontAwesomeIcon.TrashAlt.ToIconString()))
                         {
-                            using (ImRaii.PushId(emoteId))
-                            {
-                                // You have no idea how much I want to somehow create an alias named `SmolButton`.
-                                if (ImGui.SmallButton(FontAwesomeIcon.TrashAlt.ToIconString()))
-                                {
-                                    toRemove.Add(emoteId);
-                                }
-                            }
+                            toRemove.Add(emoteId);
                         }
                     }
 
@@ -553,11 +554,9 @@ namespace AetherSenseRedux
                 ImGui.TextDisabled("(?)");
                 if (ImGui.IsItemHovered())
                 {
-                    using (ImRaii.Tooltip())
-                    {
-                        ImGui.Text("Trigger when you perform the emote.");
-                        ImGui.TextDisabled("Ex: you /dote on someone.");
-                    }
+                    using var tooltip = ImRaii.Tooltip();
+                    ImGui.Text("Trigger when you perform the emote.");
+                    ImGui.TextDisabled("Ex: you /dote on someone.");
                 }
 
                 var triggerOnTarget = t.TriggerOnTarget;
@@ -570,20 +569,16 @@ namespace AetherSenseRedux
                 ImGui.TextDisabled("(?)");
                 if (ImGui.IsItemHovered())
                 {
-                    using (ImRaii.Tooltip())
-                    {
-                        ImGui.TextUnformatted("Trigger when you are the target");
-                        ImGui.TextUnformatted("of someone performing the emote.");
-                        ImGui.TextDisabled("Ex: someone /dotes on you.");
-                    }
+                    using var tooltip = ImRaii.Tooltip();
+                    ImGui.TextUnformatted("Trigger when you are the target");
+                    ImGui.TextUnformatted("of someone performing the emote.");
+                    ImGui.TextDisabled("Ex: someone /dotes on you.");
                 }
 
                 if (!t.TriggerOnPerform && !t.TriggerOnTarget)
                 {
-                    using (ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudRed))
-                    {
-                        ImGui.TextWrapped("This trigger will never activate if neither of the options are selected!");
-                    }
+                    using var color = ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudRed);
+                    ImGui.TextWrapped("This trigger will never activate if neither of the options are selected!");
                 }
 
                 ImGui.Separator();

@@ -17,6 +17,7 @@ using System.Threading;
 using AetherSenseRedux.Hooks;
 using AetherSenseRedux.Toy;
 using AetherSenseRedux.Trigger.Emote;
+using Dalamud.Game.Chat;
 using Lumina.Excel.Sheets;
 
 namespace AetherSenseRedux
@@ -101,18 +102,16 @@ namespace AetherSenseRedux
 
 
 
-        private void OnChatReceived(XivChatType type, int timestamp, ref SeString sender, ref SeString message,
-            ref bool isHandled)
+        private void OnChatReceived(IHandleableChatMessage message)
         {
-            ChatMessage chatMessage = new(type, timestamp, ref sender, ref message, ref isHandled);
             foreach (var t in _chatTriggerPool)
             {
-                t.Queue(chatMessage);
+                t.Queue(message);
             }
 
             if (Configuration.LogChat)
             {
-                Service.PluginLog.Debug(chatMessage.ToString());
+                Service.PluginLog.Debug(message.FormatMessage());
             }
         }
 

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AetherSenseRedux.Pattern;
 using Buttplug.Client;
 using System.Threading;
+using Buttplug.Core.Messages;
 using Dalamud.Utility;
 
 namespace AetherSenseRedux.Toy
@@ -31,6 +32,7 @@ namespace AetherSenseRedux.Toy
         private const int FrameTime = 16; // The target time per update, in this case 16ms = ~60 ups, and also a pipe dream for BLE toys.
         private readonly WaitType _waitType;
         private readonly Configuration configuration;
+        private readonly OutputType _outputType;
 
         public delegate void ErrorDelegate(Device device, Exception ex);
         public event ErrorDelegate? DeviceWriteError;
@@ -40,6 +42,7 @@ namespace AetherSenseRedux.Toy
             {
                 LastIntensity = _lastIntensity,
                 UPS = UPS,
+                OutputType = _outputType.ToString()
             };
 
         public Device(Configuration configuration, ButtplugClientDevice clientDevice, WaitType waitType)
@@ -50,6 +53,9 @@ namespace AetherSenseRedux.Toy
             _lastIntensity = 0;
             _active = true;
             _waitType = waitType;
+            _outputType = this.GetDeviceOutputType();
+
+            Service.PluginLog.Info($"Device {ClientDevice.Name} supports output types: {string.Join(", ", this.GetDeviceOutputTypes())}.");
         }
 
         public void Dispose()
@@ -249,7 +255,13 @@ namespace AetherSenseRedux.Toy
             {
                 this._lastIntensity = clampedIntensity;
                 this._lastWriteTime = DateTime.Now;
-                await ClientDevice.VibrateAsync(clampedIntensity).ConfigureAwait(false);
+                if (_outputType == OutputType.Unknown)
+                {
+                    Service.PluginLog.Verbose("Unable to send vibrate command because device has no supported output types!");
+                    return;
+                }
+                var outputCommand = new DeviceOutputCommand(_outputType, PercentOrSteps.FromPercent(clampedIntensity));
+                await ClientDevice.RunOutputAsync(outputCommand).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -271,6 +283,38 @@ namespace AetherSenseRedux.Toy
         private static double Clamp(double value, double min, double max)
         {
             return (value < min) ? min : (value > max) ? max : value;
+        }
+
+        /// <summary>
+        /// Get the OutputType that will be used for this device.
+        /// </summary>
+        /// <returns></returns>
+        public OutputType GetDeviceOutputType()
+        {
+            if (ClientDevice.HasOutput(OutputType.Vibrate))
+            {
+                return OutputType.Vibrate;
+            }
+            if (ClientDevice.HasOutput(OutputType.Oscillate))
+            {
+                return OutputType.Oscillate;
+            }
+
+            return OutputType.Unknown;
+        }
+
+        /// <summary>
+        /// Get the list of supported Output Types for this device
+        /// </summary>
+        /// <returns></returns>
+        public List<string> GetDeviceOutputTypes()
+        {
+            return ClientDevice.Features.Values
+                .Select((feature) => feature.FeatureDefinition.Output)
+                .Where((output) => output is { Count: > 0 })
+                .SelectMany((output) => output.Keys)
+                .Distinct()
+                .ToList();
         }
     }
 }
