@@ -1,4 +1,4 @@
-<Project Sdk="Dalamud.NET.SDK/14.0.0">
+<Project Sdk="Dalamud.NET.SDK/15.0.0">
 
   <PropertyGroup>
     <Authors>Tama Gotchi (digital-pet),Emesinae</Authors>
@@ -26,7 +26,8 @@
 	
   <ItemGroup>
     <PackageReference Include="Buttplug" Version="4.0.0" />
-    <PackageReference Update="DalamudPackager" Version="14.0.1" />
+    <PackageReference Update="DalamudPackager" Version="15.0.0" />
+    <PackageReference Update="DotNet.ReproducibleBuilds" Version="2.0.2" />
   </ItemGroup>
 
   <ItemGroup>
