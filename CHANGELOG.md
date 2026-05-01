@@ -1,4 +1,11 @@
 # Change Log
+<a name="1.3.0-alpha.0"></a>
+## [1.3.0-alpha.0](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.3.0-alpha.0) (2026-05-01)
+
+### 🌱 Features
+
+* update to Dalamud v15, and Buttplug v5 ([#36](https://www.github.com/emesinae/AetherSenseRedux/issues/36)) ([a736de0](https://www.github.com/emesinae/AetherSenseRedux/commit/a736de04ac6a830dd8d3c82bec2c4715ebb7e83a))
+
 <a name="1.2.0"></a>
 ## [1.2.0](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.2.0) (2026-01-16)
 

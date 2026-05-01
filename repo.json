@@ -21,6 +21,9 @@
     "Punchline": "Advanced haptic feedback using Intiface",
     "AcceptsFeedback": true,
     "DownloadLinkInstall": "https://github.com/emesinae/AetherSenseRedux/releases/download/v1.2.0/AetherSenseRedux.zip",
-    "DownloadLinkUpdate": "https://github.com/emesinae/AetherSenseRedux/releases/download/v1.2.0/AetherSenseRedux.zip"
+    "DownloadLinkUpdate": "https://github.com/emesinae/AetherSenseRedux/releases/download/v1.2.0/AetherSenseRedux.zip",
+    "DownloadLinkTesting": "https://github.com/emesinae/AetherSenseRedux/releases/download/v1.3.0-alpha.0/AetherSenseRedux.zip",
+    "TestingAssemblyVersion": "1.3.0.0000",
+    "TestingDalamudApiLevel": 15
   }
 ]
