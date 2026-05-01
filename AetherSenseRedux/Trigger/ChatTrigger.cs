@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.Collections.Concurrent;
 using AetherSenseRedux.Toy;
+using Dalamud.Game.Chat;
 using XIVChatTypes;
 
 namespace AetherSenseRedux.Trigger
@@ -25,7 +26,7 @@ namespace AetherSenseRedux.Trigger
         public bool UseFilter { get; init; }
 
         // ChatTrigger properties
-        private ConcurrentQueue<ChatMessage> _messages;
+        private ConcurrentQueue<IChatMessage> _messages;
         public Regex Regex { get; init; }
         public long RetriggerDelay { get; init; }
         private DateTime RetriggerTime { get; set; }
@@ -50,7 +51,7 @@ namespace AetherSenseRedux.Trigger
             UseFilter = configuration.UseFilter;
             Filter = new XIVChatFilter(configuration.FilterTable);
 
-            _messages = new ConcurrentQueue<ChatMessage>();
+            _messages = new ConcurrentQueue<IChatMessage>();
             RetriggerTime = DateTime.MinValue;
             Guid = Guid.NewGuid();
 
@@ -60,14 +61,11 @@ namespace AetherSenseRedux.Trigger
         /// Adds a chat message to the trigger's processing queue.
         /// </summary>
         /// <param name="message">The chat message.</param>
-        public void Queue(ChatMessage message)
+        public void Queue(IChatMessage message)
         {
-            if (Enabled)
-            {
-                Service.PluginLog.Verbose("{0} ({1}): Received message to queue", Name, Guid.ToString());
-
-                _messages.Enqueue(message);
-            }
+            if (!Enabled) return;
+            Service.PluginLog.Verbose("{0} ({1}): Received message to queue", Name, Guid.ToString());
+            _messages.Enqueue(message);
         }
 
         /// <summary>
@@ -125,21 +123,20 @@ namespace AetherSenseRedux.Trigger
         {
             while (Enabled)
             {
-                ChatMessage message;
-                if (_messages.TryDequeue(out message))
+                if (_messages.TryDequeue(out var message))
                 {
-                    Service.PluginLog.Verbose("{1}: Processing message: {0}", message.ToString(), Guid.ToString());
-                    if (UseFilter && !Filter.Match(message.ChatType))
+                    Service.PluginLog.Verbose("{1}: Processing message: {0}", message.FormatMessage(), Guid.ToString());
+                    if (UseFilter && !Filter.Match(message.LogKind))
                     {
                         continue;
                     }
-                    if (!Regex.IsMatch(message.ToString()))
+                    if (!Regex.IsMatch(message.FormatMessage()))
                     {
                         continue;
                     }
 
                     OnTrigger();
-                    Service.PluginLog.Debug("{1}: Triggered on message: {0}", message.ToString(), Guid.ToString());
+                    Service.PluginLog.Debug("{1}: Triggered on message: {0}", message.FormatMessage(), Guid.ToString());
                 }
                 else
                 {
@@ -181,34 +178,11 @@ namespace AetherSenseRedux.Trigger
 
     }
 
-    struct ChatMessage
+    internal static class ChatMessageExtension
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="chatType"></param>
-        /// <param name="senderId"></param>
-        /// <param name="sender"></param>
-        /// <param name="message"></param>
-        /// <param name="isHandled"></param>
-        public ChatMessage(XivChatType chatType, int timestamp, ref SeString sender, ref SeString message, ref bool isHandled)
+        public static string FormatMessage(this IChatMessage message)
         {
-            ChatType = (uint)chatType;
-            //SenderId = senderId;
-            Sender = sender.TextValue;
-            Message = message.TextValue;
-            IsHandled = isHandled;
-        }
-
-        public uint ChatType;
-        //public uint SenderId;
-        public string Sender;
-        public string Message;
-        public bool IsHandled;
-
-        public override string ToString()
-        {
-            return string.Format("<{0}> {1}", Sender, Message);
+            return $"<{message.Sender.ToString()}> {message.Message.ToString()}";
         }
     }
 }

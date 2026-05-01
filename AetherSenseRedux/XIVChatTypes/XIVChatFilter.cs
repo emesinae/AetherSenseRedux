@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Dalamud.Game.Text;
 
 namespace XIVChatTypes
 {
@@ -749,6 +750,11 @@ namespace XIVChatTypes
         {
             var chatType = XIVChatTypeEx.Decode(magic);
             return Match(chatType);
+        }
+
+        public bool Match(XivChatType chatType)
+        {
+            return this.Match((uint)chatType);
         }
 
         private static List<(Group, Group, Channel)> ExpandFilter((Group?, Group?, Channel) filter)
