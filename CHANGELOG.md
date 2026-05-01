@@ -1,4 +1,7 @@
 # Change Log
+<a name="1.3.0"></a>
+## [1.3.0](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.3.0) (2026-05-01)
+
 <a name="1.3.0-alpha.0"></a>
 ## [1.3.0-alpha.0](https://www.github.com/emesinae/AetherSenseRedux/releases/tag/v1.3.0-alpha.0) (2026-05-01)
 
