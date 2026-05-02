@@ -81,26 +81,27 @@ jobs:
           const version = '${{ steps.version.outputs.VERSION }}'
           const assemblyJsonPath = './AetherSenseRedux/bin/Release/AetherSenseRedux.json' 
 
-          let parseResult = $version | parse --regex '(?P<version>\d+\.\d+\.\d+)(?:-(?P<prerelease>(?P<label>\w+)\.(?P<prerelease_version>\d+)))?'
-          let parsedVersion = $parseResult.0
+          let parseResult = $version | parse --regex '(?P<version>\d+\.\d+\.\d+)(?:-(?P<prerelease>(?P<label>\w+)\.(?P<prereleaseVersion>\d+)))?'
+          let parsedVersion = $parseResult.0 | merge { isPrerelease: ($in.prerelease | is-not-empty) }
 
-          if ($parsedVersion.prerelease | is-empty) {
+          if $parsedVersion.isPrerelease == false {
               print "Version is not a prerelease, no adjustment necessary."
-              return
+          } else {
+              print $"Found prerelease version: '($parsedVersion.prerelease)'"
           }
 
-          print $"Found prerelease version: '($parsedVersion.prerelease)'"
-
-          let base = match $parsedVersion.label {
-              'alpha' => 0,
-              'beta' => 1000,
-              $other => {
+          let base = match ($parsedVersion | reject prerelease) {
+              { isPrerelease: true, label: 'alpha'} => 0,
+              { isPrerelease: true, label: 'beta'} => 100,
+              { isPrerelease: true, label: $other} => {
                   print $"Warning: unrecognized prerelease label '($other)'!"
-                  2000
+                  200
               }
+              { isPrerelease: false, label: _} => 500,
           }
 
-          let prereleaseId = $base + ($parsedVersion.prerelease_version | into int)
+          let prereleaseVersion = if $parsedVersion.isPrerelease { $parsedVersion.prereleaseVersion | into int } else { 0 }
+          let prereleaseId = $base + $prereleaseVersion
 
           let newPkg = open $assemblyJsonPath 
 
