@@ -105,7 +105,7 @@ jobs:
 
           let newPkg = open $assemblyJsonPath 
 
-          let newAssemblyVersion = $"($parsedVersion.version).($prereleaseId | fill -a right -c 0 -w 4)"
+          let newAssemblyVersion = $"($parsedVersion.version).($prereleaseId | fill -a right -c 0 -w 3)"
           print $"Using new assembly version: ($newAssemblyVersion)"
           $newPkg | merge { 
               AssemblyVersion: $newAssemblyVersion
